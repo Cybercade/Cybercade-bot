@@ -1,15 +1,12 @@
 import { Category } from '@discordx/utilities'
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
-import { Client, ComponentOptions, Guard, Guild } from 'discordx'
+import { ActionRowBuilder, ButtonInteraction, CommandInteraction, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { Client, Guild } from 'discordx'
 
 import { ButtonComponent, Discord, Injectable, ModalComponent, Slash } from '@/decorators'
 import { env } from '@/env'
-import { GuildOnly } from '@/guards'
 import { getLocaleFromInteraction, L } from '@/i18n'
 import { Database } from '@/services'
-import { getColor } from '@/utils/functions'
 
-import { processApplication, sendApplicationModal } from './application-function'
 import { handleApplicationModalSubmit } from './application-utils'
 
 @Discord()
