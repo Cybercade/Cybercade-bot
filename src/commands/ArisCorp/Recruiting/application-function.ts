@@ -23,12 +23,12 @@ export async function sendApplicationModal(
 ): Promise<void> {
 	const modal = new ModalBuilder()
 		.setCustomId('applicationModal')
-		.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_TITLE())
+		.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.TITLE())
 
 	// Namenseingabe
 	const nameInput = new TextInputBuilder()
 		.setCustomId('modalNameInput')
-		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_INPUT_NAME())
+		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_NAME())
 		.setStyle(TextInputStyle.Short)
 		.setPlaceholder('Chris Roberts')
 		.setRequired(true)
@@ -36,7 +36,7 @@ export async function sendApplicationModal(
 	// Namenseingabe
 	const realNameInput = new TextInputBuilder()
 		.setCustomId('realNameInput')
-		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_INPUT_REAL_NAME())
+		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_REAL_NAME())
 		.setStyle(TextInputStyle.Short)
 		.setPlaceholder('Chris Roberts')
 		.setRequired(false)
@@ -44,7 +44,7 @@ export async function sendApplicationModal(
 	// Handler-Eingabe
 	const handleInput = new TextInputBuilder()
 		.setCustomId('modalHandleInput')
-		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_INPUT_HANDLER())
+		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_HANDLER())
 		.setStyle(TextInputStyle.Short)
 		.setPlaceholder('Chris_Roberts')
 		.setRequired(true)
@@ -52,9 +52,9 @@ export async function sendApplicationModal(
 	// Bewerbungs-Eingabe
 	const applicationInput = new TextInputBuilder()
 		.setCustomId('modalApplicationInput')
-		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_INPUT_APPLICATION())
+		.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_APPLICATION())
 		.setStyle(TextInputStyle.Paragraph)
-		.setPlaceholder(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL_INPUT_APPLICATION_PLACEHOLDER())
+		.setPlaceholder(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_APPLICATION_PLACEHOLDER())
 		.setRequired(true)
 
 	// Füge die Eingabefelder dem Modal hinzu
@@ -66,13 +66,14 @@ export async function sendApplicationModal(
 	)
 
 	// Zeige das Modal dem User an
-	await interaction.showModal(modal)
+	return await interaction.showModal(modal)
 }
 
 // Funktion zur Verarbeitung der übermittelten Bewerbung
 export async function processApplication(
 	interaction: ModalSubmitInteraction
 ): Promise<void> {
+	console.log('pass 0')
 	// Lese die Werte aus dem Modal aus
 	const [name, realName, handle, application] = ['modalNameInput', 'realNameInput', 'modalHandleInput', 'modalApplicationInput'].map(
 		id => interaction.fields.getTextInputValue(id)
@@ -87,7 +88,7 @@ export async function processApplication(
 	} catch (error) {
 		console.error(error)
 	}
-
+	console.log('pass 1')
 	// Erstelle einen neuen Textkanal für die Bewerbung
 	const channel = await interaction.guild?.channels.create({
 		name: `bewerbung-${interaction.user.username}`,
@@ -116,6 +117,7 @@ export async function processApplication(
 			},
 		],
 	})
+	console.log('pass 2')
 
 	if (!channel) {
 		await interaction.reply('Failed to create application channel.')
@@ -163,11 +165,11 @@ export async function processApplication(
 	const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder()
 			.setCustomId('acceptApplication')
-			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ACCEPT())
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.BUTTONS.ACCEPT())
 			.setStyle(ButtonStyle.Success),
 		new ButtonBuilder()
 			.setCustomId('rejectApplication')
-			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECT())
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.BUTTONS.REJECT())
 			.setStyle(ButtonStyle.Danger)
 	)
 
@@ -175,5 +177,5 @@ export async function processApplication(
 	await applicationChannel.send({ embeds: [applicationEmbed], components: [actionRow] })
 
 	// Bestätige die Modal-Submission mit einer ephemeren Nachricht
-	await interaction.reply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.APPLICATION_SUCCESS(), ephemeral: true })
+	await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.APPLICATION_SUCCESS() })
 }

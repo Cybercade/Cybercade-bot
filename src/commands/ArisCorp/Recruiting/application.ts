@@ -1,19 +1,25 @@
 import { Category } from '@discordx/utilities'
-import { ButtonInteraction, CommandInteraction, ModalSubmitInteraction, TextChannel } from 'discord.js'
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { Client, ComponentOptions, Guard, Guild } from 'discordx'
 
-import { ButtonComponent, Discord, ModalComponent, Slash } from '@/decorators'
+import { ButtonComponent, Discord, Injectable, ModalComponent, Slash } from '@/decorators'
 import { env } from '@/env'
 import { GuildOnly } from '@/guards'
 import { getLocaleFromInteraction, L } from '@/i18n'
+import { Database } from '@/services'
+import { getColor } from '@/utils/functions'
 
 import { processApplication, sendApplicationModal } from './application-function'
+import { handleApplicationModalSubmit } from './application-utils'
 
 @Discord()
+@Injectable()
 @Category('General')
-@Guild('791018916196778034') // Make Command ArisCorp-Only
-export default class ApplicationCommand {
+export default class ArisCorpApplicationCommand {
 
+	constructor(
+		private db: Database
+	) { }
 
 	@ButtonComponent({ id: 'acceptApplication' })
 	async handleAcceptButton(interaction: ButtonInteraction): Promise<void> {
@@ -47,22 +53,75 @@ export default class ApplicationCommand {
 		// Logic for rejecting the application
 	}
 
-	@Slash({ name: 'application' })
-	@Guard(GuildOnly)
+	@Slash({ name: 'application', localizationSource: 'COMMANDS.APPLICATION' })
+	@Guild('791018916196778034') // Make Command ArisCorp-Only
 	async application(
 		interaction: CommandInteraction,
 		client: Client
 	) {
-		// Use the localized strings in your modal
-		await sendApplicationModal(interaction)
+		const modal = new ModalBuilder()
+			.setCustomId('applicationModal')
+			.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.TITLE())
+
+		// Namenseingabe
+		const nameInput = new TextInputBuilder()
+			.setCustomId('modalNameInput')
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_NAME())
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder('Chris Roberts')
+			.setRequired(true)
+
+		// Namenseingabe
+		const realNameInput = new TextInputBuilder()
+			.setCustomId('realNameInput')
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_REAL_NAME())
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder('Chris Roberts')
+			.setRequired(false)
+
+		// Handler-Eingabe
+		const handleInput = new TextInputBuilder()
+			.setCustomId('modalHandleInput')
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_HANDLER())
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder('Chris_Roberts')
+			.setRequired(true)
+
+		// Bewerbungs-Eingabe
+		const applicationInput = new TextInputBuilder()
+			.setCustomId('modalApplicationInput')
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_APPLICATION())
+			.setStyle(TextInputStyle.Paragraph)
+			.setPlaceholder(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.MODAL.INPUT_APPLICATION_PLACEHOLDER())
+			.setRequired(true)
+
+		// Füge die Eingabefelder dem Modal hinzu
+		modal.addComponents(
+			new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput),
+			new ActionRowBuilder<TextInputBuilder>().addComponents(realNameInput),
+			new ActionRowBuilder<TextInputBuilder>().addComponents(handleInput),
+			new ActionRowBuilder<TextInputBuilder>().addComponents(applicationInput)
+		)
+
+		// Zeige das Modal dem User an
+		await interaction.showModal(modal)
 	}
 
-	@ModalComponent({ id: 'applicationModal' } as ComponentOptions)
-	async applicationForm(
-		interaction: ModalSubmitInteraction
-	): Promise<void> {
-		// Process the application using localized strings
-		await processApplication(interaction)
+	@ModalComponent({ id: 'applicationModal' })
+	async applicationModal(interaction: ModalSubmitInteraction): Promise<void> {
+		interaction.deferReply({ ephemeral: true })
+
+		const guildData = await this.db.get(Guild).findOne({ id: interaction.guildId })
+
+		const color = guildData?.color ? guildData.color : '#2600ff'
+
+		const logic = await handleApplicationModalSubmit(interaction, color)
+
+		if (logic) {
+			await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.APPLICATION_SUCCESS() })
+		} else {
+			await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.APPLICATION_ERROR({ administration_role: env.ARISCORP_MANAGEMENT_ROLE_ID ?? '' }) })
+		}
 	}
 
 }

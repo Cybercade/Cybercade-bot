@@ -59,7 +59,7 @@ export default class ConfigCommand {
 				guildData.color = color
 				await this.db.em.persistAndFlush(guildData)
 
-				interaction.reply({ content: localize.COMMANDS.CONFIG.SET.PRIMARY_COLOR.OPTIONS.EMBED.DESCRIPTION({ prefix: generalConfig.simpleCommandsPrefix }), ephemeral: true })
+				interaction.reply({ content: localize.COMMANDS.CONFIG.SET.PRIMARY_COLOR.OPTIONS.EMBED.DESCRIPTION({ color: guildData.color }), ephemeral: true })
 			} else {
 				throw new UnknownReplyError(interaction)
 			}

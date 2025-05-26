@@ -383,29 +383,49 @@ type RootTranslation = {
 		}
 		APPLICATION: {
 			/**
-			 * A​p​p​l​i​c​a​t​i​o​n
+			 * a​p​p​l​i​c​a​t​i​o​n
 			 */
-			MODAL_TITLE: string
+			NAME: string
 			/**
-			 * N​a​m​e
+			 * A​p​p​l​y​ ​a​ ​a​p​p​l​i​c​a​t​i​o​n
 			 */
-			MODAL_INPUT_NAME: string
-			/**
-			 * R​e​a​l​ ​N​a​m​e
-			 */
-			MODAL_INPUT_REAL_NAME: string
-			/**
-			 * H​a​n​d​l​e​r
-			 */
-			MODAL_INPUT_HANDLER: string
-			/**
-			 * A​p​p​l​i​c​a​t​i​o​n
-			 */
-			MODAL_INPUT_APPLICATION: string
-			/**
-			 * T​e​l​l​ ​u​s​ ​a​b​o​u​t​ ​y​o​u​r​s​e​l​f​!
-			 */
-			MODAL_INPUT_APPLICATION_PLACEHOLDER: string
+			DESCRIPTION: string
+			MODAL: {
+				/**
+				 * A​p​p​l​i​c​a​t​i​o​n
+				 */
+				TITLE: string
+				/**
+				 * N​a​m​e
+				 */
+				INPUT_NAME: string
+				/**
+				 * R​e​a​l​ ​N​a​m​e
+				 */
+				INPUT_REAL_NAME: string
+				/**
+				 * H​a​n​d​l​e​r
+				 */
+				INPUT_HANDLER: string
+				/**
+				 * A​p​p​l​i​c​a​t​i​o​n
+				 */
+				INPUT_APPLICATION: string
+				/**
+				 * T​e​l​l​ ​u​s​ ​a​b​o​u​t​ ​y​o​u​r​s​e​l​f​!
+				 */
+				INPUT_APPLICATION_PLACEHOLDER: string
+			}
+			BUTTONS: {
+				/**
+				 * A​c​c​e​p​t
+				 */
+				ACCEPT: string
+				/**
+				 * R​e​j​e​c​t
+				 */
+				REJECT: string
+			}
 			/**
 			 * a​p​p​l​i​c​a​t​i​o​n
 			 */
@@ -415,17 +435,14 @@ type RootTranslation = {
 			 */
 			APPLICATION_PREFIX: string
 			/**
-			 * A​c​c​e​p​t
-			 */
-			ACCEPT: string
-			/**
-			 * R​e​j​e​c​t
-			 */
-			REJECT: string
-			/**
 			 * A​p​p​l​i​c​a​t​i​o​n​ ​s​u​c​c​e​s​s​f​u​l​l​y​ ​s​u​b​m​i​t​t​e​d​!
 			 */
 			APPLICATION_SUCCESS: string
+			/**
+			 * U​n​f​o​r​t​u​n​a​t​e​l​y​ ​t​h​e​r​e​ ​i​s​ ​a​n​ ​e​r​r​o​r​ ​o​c​c​u​r​e​d​ ​w​h​i​l​e​ ​a​p​p​l​y​i​n​g​ ​y​o​u​r​ ​a​p​p​l​i​c​a​t​i​o​n​.​ ​P​l​e​a​s​e​ ​w​r​i​t​e​ ​a​ ​m​e​m​b​e​r​ ​o​f​ ​t​h​e​ ​A​r​i​s​C​o​r​p​ ​A​d​m​i​n​i​s​t​r​a​t​i​o​n​ ​(​`​<​@​{​a​d​m​i​n​i​s​t​r​a​t​i​o​n​_​r​o​l​e​}​>​`​)
+			 * @param {string} administration_role
+			 */
+			APPLICATION_ERROR: RequiredParams<'administration_role'>
 			/**
 			 * Y​o​u​ ​h​a​v​e​ ​b​e​e​n​ ​a​c​c​e​p​t​e​d​ ​a​s​ ​a​n​ ​a​p​p​l​i​c​a​n​t​!
 			 */
@@ -492,10 +509,10 @@ type RootTranslation = {
 						}
 						EMBED: {
 							/**
-							 * P​r​i​m​a​r​y​ ​c​o​l​o​r​ ​c​h​a​n​g​e​d​ ​t​o​ ​`​{​p​r​e​f​i​x​}​`​.
-							 * @param {string} prefix
+							 * P​r​i​m​a​r​y​ ​c​o​l​o​r​ ​c​h​a​n​g​e​d​ ​t​o​ ​`​{​c​o​l​o​r​}​`​.
+							 * @param {string} color
 							 */
-							DESCRIPTION: RequiredParams<'prefix'>
+							DESCRIPTION: RequiredParams<'color'>
 							/**
 							 * P​l​e​a​s​e​ ​p​r​o​v​i​d​e​ ​a​ ​v​a​l​i​d​ ​h​e​x​ ​c​o​l​o​r​ ​c​o​d​e​.
 							 */
@@ -870,29 +887,49 @@ export type TranslationFunctions = {
 		}
 		APPLICATION: {
 			/**
-			 * Application
+			 * application
 			 */
-			MODAL_TITLE: () => LocalizedString
+			NAME: () => LocalizedString
 			/**
-			 * Name
+			 * Apply a application
 			 */
-			MODAL_INPUT_NAME: () => LocalizedString
-			/**
-			 * Real Name
-			 */
-			MODAL_INPUT_REAL_NAME: () => LocalizedString
-			/**
-			 * Handler
-			 */
-			MODAL_INPUT_HANDLER: () => LocalizedString
-			/**
-			 * Application
-			 */
-			MODAL_INPUT_APPLICATION: () => LocalizedString
-			/**
-			 * Tell us about yourself!
-			 */
-			MODAL_INPUT_APPLICATION_PLACEHOLDER: () => LocalizedString
+			DESCRIPTION: () => LocalizedString
+			MODAL: {
+				/**
+				 * Application
+				 */
+				TITLE: () => LocalizedString
+				/**
+				 * Name
+				 */
+				INPUT_NAME: () => LocalizedString
+				/**
+				 * Real Name
+				 */
+				INPUT_REAL_NAME: () => LocalizedString
+				/**
+				 * Handler
+				 */
+				INPUT_HANDLER: () => LocalizedString
+				/**
+				 * Application
+				 */
+				INPUT_APPLICATION: () => LocalizedString
+				/**
+				 * Tell us about yourself!
+				 */
+				INPUT_APPLICATION_PLACEHOLDER: () => LocalizedString
+			}
+			BUTTONS: {
+				/**
+				 * Accept
+				 */
+				ACCEPT: () => LocalizedString
+				/**
+				 * Reject
+				 */
+				REJECT: () => LocalizedString
+			}
 			/**
 			 * application
 			 */
@@ -902,17 +939,13 @@ export type TranslationFunctions = {
 			 */
 			APPLICATION_PREFIX: () => LocalizedString
 			/**
-			 * Accept
-			 */
-			ACCEPT: () => LocalizedString
-			/**
-			 * Reject
-			 */
-			REJECT: () => LocalizedString
-			/**
 			 * Application successfully submitted!
 			 */
 			APPLICATION_SUCCESS: () => LocalizedString
+			/**
+			 * Unfortunately there is an error occured while applying your application. Please write a member of the ArisCorp Administration (`<@{administration_role}>`)
+			 */
+			APPLICATION_ERROR: (arg: { administration_role: string }) => LocalizedString
 			/**
 			 * You have been accepted as an applicant!
 			 */
@@ -978,9 +1011,9 @@ export type TranslationFunctions = {
 						}
 						EMBED: {
 							/**
-							 * Primary color changed to `{prefix}`.
+							 * Primary color changed to `{color}`.
 							 */
-							DESCRIPTION: (arg: { prefix: string }) => LocalizedString
+							DESCRIPTION: (arg: { color: string }) => LocalizedString
 							/**
 							 * Please provide a valid hex color code.
 							 */
