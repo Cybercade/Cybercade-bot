@@ -42,7 +42,7 @@
     "@tsed/di": "^7.84.1",
     "@tsed/exceptions": "^7.84.1",
     "@tsed/json-mapper": "^7.84.1",
-    "@tsed/platform-express": "^7.84.1",
+    "@tsed/platform-express": "^8.12.5",
     "@tsed/schema": "^7.84.1",
     "@tsed/swagger": "^7.84.1",
     "@types/rss": "^0.0.32",
