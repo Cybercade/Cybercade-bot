@@ -1,8 +1,8 @@
 import { Options } from '@mikro-orm/core'
 import { EntityGenerator } from '@mikro-orm/entity-generator'
 import { Migrator } from '@mikro-orm/migrations'
+import { PostgreSqlDriver } from '@mikro-orm/postgresql'
 import { SqlHighlighter } from '@mikro-orm/sql-highlighter'
-import { SqliteDriver } from '@mikro-orm/sqlite'
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { env } from '@/env'
@@ -30,8 +30,8 @@ const envMikroORMConfig = {
 		/**
 		 * SQLite
 		 */
-		driver: SqliteDriver,
-		dbName: `${databaseConfig.path}db.sqlite`,
+		// driver: SqliteDriver,
+		// dbName: `${databaseConfig.path}db.sqlite`,
 
 		/**
 		 * MongoDB
@@ -42,12 +42,12 @@ const envMikroORMConfig = {
 		/**
 		 * PostgreSQL
 		 */
-		// driver: PostgreSqlDriver,
-		// dbName: env.DATABASE_NAME,
-		// host: env.DATABASE_HOST,
-		// port: Number(env.DATABASE_PORT),
-		// user: env.DATABASE_USER,
-		// password: env.DATABASE_PASSWORD,
+		driver: PostgreSqlDriver,
+		dbName: env.DATABASE_NAME,
+		host: env.DATABASE_HOST,
+		port: Number(env.DATABASE_PORT),
+		user: env.DATABASE_USER,
+		password: env.DATABASE_PASSWORD,
 
 		/**
 		 * MySQL
