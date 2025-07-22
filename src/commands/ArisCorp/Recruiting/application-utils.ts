@@ -1,7 +1,7 @@
 import { SqlEntityRepository } from '@mikro-orm/postgresql'
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ColorResolvable, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
 
-import { ApplicationStatus, ArisCorpApplication } from '@/entities'
+import { ArisCorpApplication } from '@/entities'
 import { env } from '@/env'
 import { getLocaleFromInteraction, L } from '@/i18n'
 
@@ -114,7 +114,7 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 
 	// Create DB Item
 	const applicationItem = new ArisCorpApplication()
-	applicationItem.status = ApplicationStatus.OPEN
+	applicationItem.status = 'OPEN'
 	applicationItem.userId = interaction.member.user.id
 	applicationItem.channelId = applicationChannel.id
 	applicationItem.embedMessageId = embedMessage.id

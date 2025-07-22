@@ -3,7 +3,7 @@ import { ActionRowBuilder, ButtonInteraction, CommandInteraction, EmbedBuilder, 
 import { Client, Guild } from 'discordx'
 
 import { ButtonComponent, Discord, Injectable, ModalComponent, Slash } from '@/decorators'
-import { ApplicationStatus, ArisCorpApplication } from '@/entities'
+import { ArisCorpApplication } from '@/entities'
 import { env } from '@/env'
 import { getLocaleFromInteraction, L } from '@/i18n'
 import { Database } from '@/services'
@@ -56,7 +56,7 @@ export default class ArisCorpApplicationCommand {
 			}))
 
 			// Set application to accepted
-			applicationDbItem.status = ApplicationStatus.ACCEPTED
+			applicationDbItem.status = 'ACCEPTED'
 			await applicationRepo.upsert(applicationDbItem)
 		} catch (error) {
 			console.error(error)
@@ -85,7 +85,7 @@ export default class ArisCorpApplicationCommand {
 		if (fieldIndex !== -1) embedToEdit.data.fields[fieldIndex].value = '**ABGELEHNT** ❌'
 
 		// Set application to rejected
-		applicationDbItem.status = ApplicationStatus.REJECTED
+		applicationDbItem.status = 'REJECTED'
 		await applicationRepo.upsert(applicationDbItem)
 	}
 
