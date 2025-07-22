@@ -1,11 +1,11 @@
+import { SqlEntityRepository } from '@mikro-orm/postgresql'
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ColorResolvable, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
-import { Client } from 'discordx'
 
+import { ApplicationStatus, ArisCorpApplication } from '@/entities'
 import { env } from '@/env'
 import { getLocaleFromInteraction, L } from '@/i18n'
-import { getColor } from '@/utils/functions'
 
-export async function handleApplicationModalSubmit(interaction: ModalSubmitInteraction, color: ColorResolvable): Promise<boolean> {
+export async function handleApplicationModalSubmit(interaction: ModalSubmitInteraction, color: ColorResolvable, applicationRepo: SqlEntityRepository<ArisCorpApplication>): Promise<boolean> {
 	// Lese die Werte aus dem Modal aus
 	const [name, realName, handle, application] = ['modalNameInput', 'realNameInput', 'modalHandleInput', 'modalApplicationInput'].map(
 		id => interaction.fields.getTextInputValue(id)
@@ -50,7 +50,7 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 		],
 	})
 
-	if (!channel) {
+	if (!channel || !interaction.member) {
 		await interaction.reply('Failed to create application channel.')
 
 		return false
@@ -74,13 +74,18 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 				inline: true,
 			},
 			{
-				name: 'Discord Name',
-				value: interaction.user.username,
+				name: 'Discord Profil',
+				value: `<@${interaction.member.user.id}>`,
 				inline: true,
 			},
 			{
 				name: 'Realer Name',
 				value: realName || 'N/A',
+				inline: true,
+			},
+			{
+				name: 'Status',
+				value: '**OFFEN** 📄',
 				inline: true,
 			}
 		)
@@ -105,7 +110,16 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 	)
 
 	// Sende das Embed samt Buttons im neu erstellten Kanal
-	await applicationChannel.send({ embeds: [applicationEmbed], components: [actionRow] })
+	const embedMessage = await applicationChannel.send({ embeds: [applicationEmbed], components: [actionRow] })
+
+	// Create DB Item
+	const applicationItem = new ArisCorpApplication()
+	applicationItem.status = ApplicationStatus.OPEN
+	applicationItem.userId = interaction.member.user.id
+	applicationItem.channelId = applicationChannel.id
+	applicationItem.embedMessageId = embedMessage.id
+
+	await applicationRepo.insert(applicationItem)
 
 	return true
 }

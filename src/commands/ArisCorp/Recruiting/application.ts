@@ -1,8 +1,9 @@
 import { Category } from '@discordx/utilities'
-import { ActionRowBuilder, ButtonInteraction, CommandInteraction, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { ActionRowBuilder, ButtonInteraction, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { Client, Guild } from 'discordx'
 
 import { ButtonComponent, Discord, Injectable, ModalComponent, Slash } from '@/decorators'
+import { ApplicationStatus, ArisCorpApplication } from '@/entities'
 import { env } from '@/env'
 import { getLocaleFromInteraction, L } from '@/i18n'
 import { Database } from '@/services'
@@ -20,25 +21,43 @@ export default class ArisCorpApplicationCommand {
 
 	@ButtonComponent({ id: 'acceptApplication' })
 	async handleAcceptButton(interaction: ButtonInteraction): Promise<void> {
-		// Get the username from the channel name
-		// @ts-expect-error
-		const channelName = interaction.channel.name
-		const username = channelName.replace(`${L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.CHANNEL_PREFIX()}-`, '')
+		const applicationRepo = this.db.get(ArisCorpApplication)
 
-		// Give user applicant role
-		const member = interaction.guild?.members.cache.find(m => m.user.username.toLowerCase() === username.toLowerCase())
+		// Get Application DB-Item
+		const applicationDbItem = await applicationRepo.findOne({ channelId: interaction.channelId })
+
+		if (!applicationDbItem) throw new Error('Cannot get application db item')
+
+		// Get Application-Member
+		const member = await interaction.guild?.members.fetch(applicationDbItem?.userId)
 
 		try {
-			// Give the user the applicant role
-			await member?.roles.add(env.ARISCORP_APPLICANT_ROLE_ID as string)
+			if (!member) throw new Error('Cannot get application member')
+
+			// Give the member the applicant role
+			await member.roles.add(env.ARISCORP_APPLICANT_ROLE_ID as string)
+
+			// Edit embed
+			const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.channelId)
+			const originalEmbedData = embedMessage?.embeds[0].toJSON()
+			const embedToEdit = new EmbedBuilder(originalEmbedData)
+			const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
+
+			// @ts-expect-error-error
+			if (fieldIndex !== -1) embedToEdit.data.fields[fieldIndex].value = '**AKZEPTIERT** ✅'
+
 			// Send a message to the user
 			interaction.reply(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ACCEPTED_MESSAGE())
 
 			// Send a message to the internal channel
 			const internalChannel = interaction.guild?.channels.cache.get(env.ARISCORP_INTERNAL_CHANNEL_ID as string) as TextChannel
 			internalChannel?.send(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ANNOUNCE_APPLICANT({
-				user_id: member?.id || '',
+				user_id: member.id,
 			}))
+
+			// Set application to accepted
+			applicationDbItem.status = ApplicationStatus.ACCEPTED
+			await applicationRepo.upsert(applicationDbItem)
 		} catch (error) {
 			console.error(error)
 			interaction.reply('An error occurred while trying to give the user the applicant role.')
@@ -48,6 +67,26 @@ export default class ArisCorpApplicationCommand {
 	@ButtonComponent({ id: 'rejectApplication' })
 	async handleRejectButton(interaction: ButtonInteraction): Promise<void> {
 		// Logic for rejecting the application
+
+		const applicationRepo = this.db.get(ArisCorpApplication)
+
+		// Get Application DB-Item
+		const applicationDbItem = await applicationRepo.findOne({ channelId: interaction.channelId })
+
+		if (!applicationDbItem) throw new Error('Cannot get application db item')
+
+		// Edit embed
+		const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.channelId)
+		const originalEmbedData = embedMessage?.embeds[0].toJSON()
+		const embedToEdit = new EmbedBuilder(originalEmbedData)
+		const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
+
+		// @ts-expect-error-error
+		if (fieldIndex !== -1) embedToEdit.data.fields[fieldIndex].value = '**ABGELEHNT** ❌'
+
+		// Set application to rejected
+		applicationDbItem.status = ApplicationStatus.REJECTED
+		await applicationRepo.upsert(applicationDbItem)
 	}
 
 	@Slash({ name: 'application', localizationSource: 'COMMANDS.APPLICATION' })
@@ -112,7 +151,9 @@ export default class ArisCorpApplicationCommand {
 
 		const color = guildData?.color ? guildData.color : '#2600ff'
 
-		const logic = await handleApplicationModalSubmit(interaction, color)
+		const applicationRepo = this.db.get(ArisCorpApplication)
+
+		const logic = await handleApplicationModalSubmit(interaction, color, applicationRepo)
 
 		if (logic) {
 			await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.APPLICATION_SUCCESS() })
