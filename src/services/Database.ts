@@ -188,7 +188,6 @@ export class Database {
 	isSQLiteDatabase(): boolean {
 		const config = mikroORMConfig[env.NODE_ENV]
 
-		// @ts-expect-error
 		return !!config.dbName && !config.port
 	}
 
