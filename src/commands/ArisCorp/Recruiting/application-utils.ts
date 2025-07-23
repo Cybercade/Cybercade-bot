@@ -76,12 +76,12 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 			},
 			{
 				name: 'RSI Handle',
-				value: handle ? handle?.trim() : 'N/A',
+				value: handle ? handle?.trim() : '-',
 				inline: true,
 			},
 			{
 				name: 'Realer Name',
-				value: realName || 'N/A',
+				value: realName || '-',
 				inline: true,
 			},
 			{
