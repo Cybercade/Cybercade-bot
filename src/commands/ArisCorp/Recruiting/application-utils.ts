@@ -70,6 +70,11 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 		.setDescription(application)
 		.addFields(
 			{
+				name: 'Status',
+				value: '**OFFEN** 📄',
+				inline: false,
+			},
+			{
 				name: 'RSI Handle',
 				value: handle ? handle?.trim() : 'N/A',
 				inline: true,
@@ -77,11 +82,6 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 			{
 				name: 'Realer Name',
 				value: realName || 'N/A',
-				inline: true,
-			},
-			{
-				name: 'Status',
-				value: '**OFFEN** 📄',
 				inline: true,
 			},
 			{
