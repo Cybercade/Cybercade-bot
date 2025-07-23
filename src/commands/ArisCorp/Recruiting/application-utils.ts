@@ -26,7 +26,6 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 		name: `bewerbung-${interaction.user.username}`,
 		type: ChannelType.GuildText,
 		topic: `Bewerbung von ${name}`,
-		parent: env.ARISCORP_APPLICATIONS_CATEGORY_ID as string,
 		permissionOverwrites: [
 			{
 				id: interaction.guild?.roles.everyone.id,
@@ -49,7 +48,7 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 				allow: ['ViewChannel'],
 			},
 		],
-	})
+	}).then(channel => channel.setParent(env.ARISCORP_APPLICATIONS_CATEGORY_ID as string))
 
 	if (!channel || !interaction.member) {
 		await interaction.reply('Failed to create application channel.')
