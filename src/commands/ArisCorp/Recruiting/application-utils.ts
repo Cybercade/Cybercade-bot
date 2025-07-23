@@ -82,12 +82,12 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 			{
 				name: 'Realer Name',
 				value: realName || '-',
-				inline: true,
+				inline: false,
 			},
 			{
 				name: 'RSI Handle',
 				value: handle ? handle?.trim() : '-',
-				inline: false,
+				inline: true,
 			},
 			{
 				name: 'Discord Profil',
