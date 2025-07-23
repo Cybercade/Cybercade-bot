@@ -43,6 +43,9 @@ export default class ArisCorpApplicationCommand {
 			// Give the member the applicant role
 			await member.roles.add(env.ARISCORP_APPLICANT_ROLE_ID as string)
 
+			// Remove the guest role from the member
+			if (member.roles.cache.find(role => role.id === env.ARISCORP_GUEST_ROLE_ID as string)) await member.roles.remove(env.ARISCORP_GUEST_ROLE_ID as string)
+
 			// Edit embed
 			const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.embedMessageId)
 			const originalEmbedData = embedMessage?.embeds[0].toJSON()
