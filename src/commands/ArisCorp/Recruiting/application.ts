@@ -28,7 +28,11 @@ export default class ArisCorpApplicationCommand {
 
 		if (!applicationDbItem) throw new Error('Cannot get application db item')
 
-		if (applicationDbItem.status.toLowerCase() !== 'open') await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
+		if (applicationDbItem.status.toLowerCase() !== 'open') {
+			await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
+
+			return
+		}
 
 		// Get Application-Member
 		const member = await interaction.guild?.members.fetch(applicationDbItem?.userId)
@@ -46,7 +50,7 @@ export default class ArisCorpApplicationCommand {
 			const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
 
 			if (fieldIndex !== -1) {
-			// @ts-expect-error-error
+				// @ts-expect-error-error
 				embedToEdit.data.fields[fieldIndex].value = '**AKZEPTIERT** ✅'
 
 				await embedMessage?.edit({ embeds: [embedToEdit] })
@@ -81,7 +85,11 @@ export default class ArisCorpApplicationCommand {
 
 		if (!applicationDbItem) throw new Error('Cannot get application db item')
 
-		if (applicationDbItem.status.toLowerCase() !== 'open') await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
+		if (applicationDbItem.status.toLowerCase() !== 'open') {
+			await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
+
+			return
+		}
 
 		const rejectingModal = new ModalBuilder()
 			.setCustomId('rejectingModal')
