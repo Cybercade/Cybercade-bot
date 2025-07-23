@@ -38,7 +38,7 @@ export default class ArisCorpApplicationCommand {
 			await member.roles.add(env.ARISCORP_APPLICANT_ROLE_ID as string)
 
 			// Edit embed
-			const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.channelId)
+			const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.embedMessageId)
 			const originalEmbedData = embedMessage?.embeds[0].toJSON()
 			const embedToEdit = new EmbedBuilder(originalEmbedData)
 			const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
@@ -78,7 +78,7 @@ export default class ArisCorpApplicationCommand {
 		console.log('db-item-rej', JSON.stringify(applicationDbItem, null, 2))
 
 		// Edit embed
-		const embedMessage = await interaction.channel?.messages.cache.find(c => c.id === applicationDbItem.channelId)
+		const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.embedMessageId)
 		console.log('embed-message-rej', JSON.stringify(embedMessage, null, 2))
 		const originalEmbedData = embedMessage?.embeds[0].toJSON()
 		const embedToEdit = new EmbedBuilder(originalEmbedData)
