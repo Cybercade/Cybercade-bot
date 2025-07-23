@@ -19,7 +19,7 @@ export default class ArisCorpApplicationDebugCommand {
 		private db: Database
 	) { }
 
-	@Slash({ name: 'application-debug', localizationSource: 'COMMANDS.APPLICATION' })
+	@Slash({ name: 'application-debug' })
 	@Guard(Disabled) // Make Command ArisCorp-Only
 	async applicationDebug(
 		interaction: CommandInteraction,
