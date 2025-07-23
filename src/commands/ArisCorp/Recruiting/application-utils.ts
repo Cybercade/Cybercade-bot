@@ -75,14 +75,19 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 				inline: false,
 			},
 			{
-				name: 'RSI Handle',
-				value: handle ? handle?.trim() : '-',
+				name: 'Fiktiver Name',
+				value: name,
 				inline: true,
 			},
 			{
 				name: 'Realer Name',
 				value: realName || '-',
 				inline: true,
+			},
+			{
+				name: 'RSI Handle',
+				value: handle ? handle?.trim() : '-',
+				inline: false,
 			},
 			{
 				name: 'Discord Profil',
