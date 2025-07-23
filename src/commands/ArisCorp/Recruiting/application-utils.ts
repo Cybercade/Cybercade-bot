@@ -26,6 +26,7 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 		name: `bewerbung-${interaction.user.username}`,
 		type: ChannelType.GuildText,
 		topic: `Bewerbung von ${name}`,
+		parent: env.ARISCORP_APPLICATIONS_CATEGORY_ID as string,
 		permissionOverwrites: [
 			{
 				id: interaction.guild?.roles.everyone.id,

@@ -33,6 +33,7 @@ export const env = cleanEnv(process.env, {
 	ARISCORP_APPLICANT_ROLE_ID: str({ default: undefined }),
 	ARISCORP_BOT_ROLE_ID: str({ default: undefined }),
 	ARISCORP_INTERNAL_CHANNEL_ID: str({ default: undefined }),
+	ARISCORP_APPLICATIONS_CATEGORY_ID: str({ default: undefined }),
 })
 
 export function checkEnvironmentVariables() {
