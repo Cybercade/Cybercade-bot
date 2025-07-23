@@ -43,8 +43,12 @@ export default class ArisCorpApplicationCommand {
 			const embedToEdit = new EmbedBuilder(originalEmbedData)
 			const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
 
+			if (fieldIndex !== -1) {
 			// @ts-expect-error-error
-			if (fieldIndex !== -1) embedToEdit.data.fields[fieldIndex].value = '**AKZEPTIERT** ✅'
+				embedToEdit.data.fields[fieldIndex].value = '**AKZEPTIERT** ✅'
+
+				await embedMessage?.edit({ embeds: [embedToEdit] })
+			}
 
 			// Send a message to the user
 			interaction.reply(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ACCEPTED_MESSAGE())
@@ -75,17 +79,18 @@ export default class ArisCorpApplicationCommand {
 
 		if (!applicationDbItem) throw new Error('Cannot get application db item')
 
-		console.log('db-item-rej', JSON.stringify(applicationDbItem, null, 2))
-
 		// Edit embed
 		const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.embedMessageId)
-		console.log('embed-message-rej', JSON.stringify(embedMessage, null, 2))
 		const originalEmbedData = embedMessage?.embeds[0].toJSON()
 		const embedToEdit = new EmbedBuilder(originalEmbedData)
 		const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
 
-		// @ts-expect-error-error
-		if (fieldIndex !== -1) embedToEdit.data.fields[fieldIndex].value = '**ABGELEHNT** ❌'
+		if (fieldIndex !== -1) {
+			// @ts-expect-error-error
+			embedToEdit.data.fields[fieldIndex].value = '**ABGELEHNT** ❌'
+
+			await embedMessage?.edit({ embeds: [embedToEdit] })
+		}
 
 		// Set application to rejected
 		applicationDbItem.status = 'REJECTED'
