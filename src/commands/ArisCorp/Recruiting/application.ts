@@ -28,6 +28,8 @@ export default class ArisCorpApplicationCommand {
 
 		if (!applicationDbItem) throw new Error('Cannot get application db item')
 
+		if (applicationDbItem.status.toLowerCase() !== 'open') await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
+
 		// Get Application-Member
 		const member = await interaction.guild?.members.fetch(applicationDbItem?.userId)
 
@@ -71,6 +73,15 @@ export default class ArisCorpApplicationCommand {
 	@ButtonComponent({ id: 'rejectApplication' })
 	async handleRejectButton(interaction: ButtonInteraction): Promise<void> {
 		// Logic for rejecting the application
+
+		const applicationRepo = this.db.get(ArisCorpApplication)
+
+		// Get Application DB-Item
+		const applicationDbItem = await applicationRepo.findOne({ channelId: interaction.channelId })
+
+		if (!applicationDbItem) throw new Error('Cannot get application db item')
+
+		if (applicationDbItem.status.toLowerCase() !== 'open') await interaction.reply({ ephemeral: true, content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.ALREADY_PROCESSED() })
 
 		const rejectingModal = new ModalBuilder()
 			.setCustomId('rejectingModal')

@@ -171,6 +171,7 @@ Willkommen in der ArisCorp!**`,
 Leider wurde deine Bewerbung abgelehnt.
 
 Begründung für Ablehnung: {reason}`,
+			ALREADY_PROCESSED: 'Diese Bewerbung wurde bereits bearbeitet!',
 			ANNOUNCE_APPLICANT: `Hallo an alle Mitarbeiter der ArisCorp,
 
 wir haben <@{user_id}> als neuen Anwärter gewonnen. Heißt ihn herzlich willkommen!`,

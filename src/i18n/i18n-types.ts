@@ -468,6 +468,10 @@ type RootTranslation = {
 			 */
 			REJECTED_MESSAGE: RequiredParams<'reason' | 'user_id'>
 			/**
+			 * T​h​i​s​ ​a​p​p​l​i​c​a​t​i​o​n​ ​h​a​s​ ​a​l​r​e​a​d​y​ ​b​e​e​n​ ​p​r​o​c​e​s​s​e​d​!
+			 */
+			ALREADY_PROCESSED: string
+			/**
 			 * H​e​l​l​o​ ​e​v​e​r​y​o​n​e​ ​a​t​ ​A​r​i​s​C​o​r​p​,​
 		​
 		​w​e​ ​h​a​v​e​ ​<​@​{​u​s​e​r​_​i​d​}​>​ ​a​s​ ​n​e​w​ ​a​p​p​l​i​c​a​n​t​!
@@ -983,6 +987,10 @@ export type TranslationFunctions = {
 		Reason for rejecting: {reason}
 			 */
 			REJECTED_MESSAGE: (arg: { reason: string, user_id: string }) => LocalizedString
+			/**
+			 * This application has already been processed!
+			 */
+			ALREADY_PROCESSED: () => LocalizedString
 			/**
 			 * Hello everyone at ArisCorp,
 	

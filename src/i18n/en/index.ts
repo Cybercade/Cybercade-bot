@@ -170,6 +170,7 @@ const en = {
 You have been rejected as an applicant! 
 
 Reason for rejecting: {reason:string}`,
+			ALREADY_PROCESSED: 'This application has already been processed!',
 			ANNOUNCE_APPLICANT: `Hello everyone at ArisCorp,
 
 we have <@{user_id}> as new applicant!`,
