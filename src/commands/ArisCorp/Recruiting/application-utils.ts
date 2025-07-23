@@ -75,11 +75,6 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 				inline: true,
 			},
 			{
-				name: 'Discord Profil',
-				value: `<@${interaction.member.user.id}>`,
-				inline: true,
-			},
-			{
 				name: 'Realer Name',
 				value: realName || 'N/A',
 				inline: true,
@@ -87,6 +82,11 @@ export async function handleApplicationModalSubmit(interaction: ModalSubmitInter
 			{
 				name: 'Status',
 				value: '**OFFEN** 📄',
+				inline: true,
+			},
+			{
+				name: 'Discord Profil',
+				value: `<@${interaction.member.user.id}>`,
 				inline: true,
 			}
 		)
