@@ -74,7 +74,7 @@ export default class ArisCorpApplicationCommand {
 
 		const rejectingModal = new ModalBuilder()
 			.setCustomId('rejectingModal')
-			.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTING_MODAL.TITLE({ user_name: interaction.user.username }))
+			.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTING_MODAL.TITLE({ user_name: interaction.user.displayName }))
 
 		const reasonInput = new TextInputBuilder()
 			.setCustomId('rejectingModalReasonInput')
@@ -87,7 +87,7 @@ export default class ArisCorpApplicationCommand {
 			new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput)
 		)
 
-		interaction.showModal(rejectingModal)
+		await interaction.showModal(rejectingModal)
 	}
 
 	@ModalComponent({ id: 'rejectingModal' })
@@ -119,7 +119,7 @@ export default class ArisCorpApplicationCommand {
 		}
 
 		// Send rejecting message to application channel
-		await (interaction.channel as TextChannel).send({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTED_MESSAGE({ reason }) })
+		await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTED_MESSAGE({ reason }) })
 
 		// Set application to rejected
 		applicationDbItem.status = 'REJECTED'

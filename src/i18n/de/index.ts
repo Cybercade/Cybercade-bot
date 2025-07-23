@@ -167,8 +167,9 @@ const de = {
 			APPLICATION_ERROR: 'Leider gab es einen Fehler beim Einreichen der Bewerbung. Du kannst alternativ gerne ein Mitglied des ArisCorp-Vorstands schreiben. {administration_role}',
 			ACCEPTED_MESSAGE: `**Herzlichen Glückwunsch, deine Bewerbung wurde angenommen!
 Willkommen in der ArisCorp!**`,
-			REJECTED_MESSAGE: `Leider wurde deine Bewerbung abgelehnt. 
- Begründung für Ablehnung: {reason}`,
+			REJECTED_MESSAGE: `Leider wurde deine Bewerbung abgelehnt.
+
+Begründung für Ablehnung: {reason}`,
 			ANNOUNCE_APPLICANT: `Hallo an alle Mitarbeiter der ArisCorp,
 
 wir haben <@{user_id}> als neuen Anwärter gewonnen. Heißt ihn herzlich willkommen!`,

@@ -167,7 +167,8 @@ const en = {
 			APPLICATION_ERROR: 'Unfortunately there is an error occured while applying your application. Please write a member of the ArisCorp Administration (`<@{administration_role:string}>`)',
 			ACCEPTED_MESSAGE: 'You have been accepted as an applicant!',
 			REJECTED_MESSAGE: `You have been rejected as an applicant! 
- Reason for rejecting: {reason:string}`,
+
+Reason for rejecting: {reason:string}`,
 			ANNOUNCE_APPLICANT: `Hello everyone at ArisCorp,
 
 we have <@{user_id}> as new applicant!`,
