@@ -23,7 +23,7 @@ export class ArisCorpApplication extends CustomBaseEntity {
 	@Property()
   embedMessageId!: string
 
-	@Property()
+	@Property({ default: 'OPEN' })
   status!: string
 
 	// @Enum({ items: () => ApplicationStatus, nativeEnumName: 'application_status' })
