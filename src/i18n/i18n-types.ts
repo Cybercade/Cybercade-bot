@@ -416,6 +416,17 @@ type RootTranslation = {
 				 */
 				INPUT_APPLICATION_PLACEHOLDER: string
 			}
+			REJECTING_MODAL: {
+				/**
+				 * R​e​j​e​c​t​i​n​g​ ​A​p​p​l​i​c​a​t​i​o​n​ ​f​r​o​m​ ​{​u​s​e​r​_​n​a​m​e​}
+				 * @param {string} user_name
+				 */
+				TITLE: RequiredParams<'user_name'>
+				/**
+				 * R​e​a​s​o​n
+				 */
+				INPUT_REASON: string
+			}
 			BUTTONS: {
 				/**
 				 * A​c​c​e​p​t
@@ -448,9 +459,11 @@ type RootTranslation = {
 			 */
 			ACCEPTED_MESSAGE: string
 			/**
-			 * Y​o​u​ ​h​a​v​e​ ​b​e​e​n​ ​r​e​j​e​c​t​e​d​ ​a​s​ ​a​n​ ​a​p​p​l​i​c​a​n​t​!
+			 * Y​o​u​ ​h​a​v​e​ ​b​e​e​n​ ​r​e​j​e​c​t​e​d​ ​a​s​ ​a​n​ ​a​p​p​l​i​c​a​n​t​!​ ​
+		​ ​R​e​a​s​o​n​ ​f​o​r​ ​r​e​j​e​c​t​i​n​g​:​ ​{​r​e​a​s​o​n​}
+			 * @param {string} reason
 			 */
-			REJECTED_MESSAGE: string
+			REJECTED_MESSAGE: RequiredParams<'reason'>
 			/**
 			 * H​e​l​l​o​ ​e​v​e​r​y​o​n​e​ ​a​t​ ​A​r​i​s​C​o​r​p​,​
 		​
@@ -920,6 +933,16 @@ export type TranslationFunctions = {
 				 */
 				INPUT_APPLICATION_PLACEHOLDER: () => LocalizedString
 			}
+			REJECTING_MODAL: {
+				/**
+				 * Rejecting Application from {user_name}
+				 */
+				TITLE: (arg: { user_name: string }) => LocalizedString
+				/**
+				 * Reason
+				 */
+				INPUT_REASON: () => LocalizedString
+			}
 			BUTTONS: {
 				/**
 				 * Accept
@@ -951,9 +974,10 @@ export type TranslationFunctions = {
 			 */
 			ACCEPTED_MESSAGE: () => LocalizedString
 			/**
-			 * You have been rejected as an applicant!
+			 * You have been rejected as an applicant! 
+		 Reason for rejecting: {reason}
 			 */
-			REJECTED_MESSAGE: () => LocalizedString
+			REJECTED_MESSAGE: (arg: { reason: string }) => LocalizedString
 			/**
 			 * Hello everyone at ArisCorp,
 	

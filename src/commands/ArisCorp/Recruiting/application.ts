@@ -72,6 +72,32 @@ export default class ArisCorpApplicationCommand {
 	async handleRejectButton(interaction: ButtonInteraction): Promise<void> {
 		// Logic for rejecting the application
 
+		const rejectingModal = new ModalBuilder()
+			.setCustomId('rejectingModal')
+			.setTitle(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTING_MODAL.TITLE({ user_name: interaction.user.username }))
+
+		const reasonInput = new TextInputBuilder()
+			.setCustomId('rejectingModalReasonInput')
+			.setLabel(L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTING_MODAL.INPUT_REASON())
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder('Wir lehnen deine Bewerbung ab weil ....')
+			.setRequired(true)
+
+		rejectingModal.addComponents(
+			new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput)
+		)
+
+		interaction.showModal(rejectingModal)
+	}
+
+	@ModalComponent({ id: 'rejectingModal' })
+	async applicationRejectingModal(interaction: ModalSubmitInteraction): Promise<void> {
+		await interaction.deferReply()
+
+		const [reason] = ['rejectingModalReasonInput'].map(
+			id => interaction.fields.getTextInputValue(id)
+		)
+
 		const applicationRepo = this.db.get(ArisCorpApplication)
 
 		// Get Application DB-Item
@@ -91,6 +117,9 @@ export default class ArisCorpApplicationCommand {
 
 			await embedMessage?.edit({ embeds: [embedToEdit] })
 		}
+
+		// Send rejecting message to application channel
+		await (interaction.channel as TextChannel).send({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTED_MESSAGE({ reason }) })
 
 		// Set application to rejected
 		applicationDbItem.status = 'REJECTED'
