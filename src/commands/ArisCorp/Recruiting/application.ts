@@ -75,8 +75,11 @@ export default class ArisCorpApplicationCommand {
 
 		if (!applicationDbItem) throw new Error('Cannot get application db item')
 
+		console.log('db-item-rej', JSON.stringify(applicationDbItem, null, 2))
+
 		// Edit embed
 		const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.channelId)
+		console.log('embed-message-rej', JSON.stringify(embedMessage, null, 2))
 		const originalEmbedData = embedMessage?.embeds[0].toJSON()
 		const embedToEdit = new EmbedBuilder(originalEmbedData)
 		const fieldIndex = embedToEdit.data.fields?.findIndex(field => field.name === 'Status')
