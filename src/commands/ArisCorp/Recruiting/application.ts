@@ -78,7 +78,7 @@ export default class ArisCorpApplicationCommand {
 		console.log('db-item-rej', JSON.stringify(applicationDbItem, null, 2))
 
 		// Edit embed
-		const embedMessage = await interaction.channel?.messages.fetch(applicationDbItem.channelId)
+		const embedMessage = await interaction.channel?.messages.cache.find(c => c.id === applicationDbItem.channelId)
 		console.log('embed-message-rej', JSON.stringify(embedMessage, null, 2))
 		const originalEmbedData = embedMessage?.embeds[0].toJSON()
 		const embedToEdit = new EmbedBuilder(originalEmbedData)
