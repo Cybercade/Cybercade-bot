@@ -119,7 +119,8 @@ export default class ArisCorpApplicationCommand {
 		}
 
 		// Send rejecting message to application channel
-		await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTED_MESSAGE({ reason }) })
+		const applicantUserId = applicationDbItem.userId
+		await interaction.editReply({ content: L[getLocaleFromInteraction(interaction)].COMMANDS.APPLICATION.REJECTED_MESSAGE({ user_id: applicantUserId, reason }) })
 
 		// Set application to rejected
 		applicationDbItem.status = 'REJECTED'

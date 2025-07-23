@@ -459,11 +459,14 @@ type RootTranslation = {
 			 */
 			ACCEPTED_MESSAGE: string
 			/**
-			 * Y​o​u​ ​h​a​v​e​ ​b​e​e​n​ ​r​e​j​e​c​t​e​d​ ​a​s​ ​a​n​ ​a​p​p​l​i​c​a​n​t​!​ ​
-		​ ​R​e​a​s​o​n​ ​f​o​r​ ​r​e​j​e​c​t​i​n​g​:​ ​{​r​e​a​s​o​n​}
+			 * <​@​{​u​s​e​r​_​i​d​}​>​
+		​Y​o​u​ ​h​a​v​e​ ​b​e​e​n​ ​r​e​j​e​c​t​e​d​ ​a​s​ ​a​n​ ​a​p​p​l​i​c​a​n​t​!​ ​
+		​
+		​R​e​a​s​o​n​ ​f​o​r​ ​r​e​j​e​c​t​i​n​g​:​ ​{​r​e​a​s​o​n​}
 			 * @param {string} reason
+			 * @param {string} user_id
 			 */
-			REJECTED_MESSAGE: RequiredParams<'reason'>
+			REJECTED_MESSAGE: RequiredParams<'reason' | 'user_id'>
 			/**
 			 * H​e​l​l​o​ ​e​v​e​r​y​o​n​e​ ​a​t​ ​A​r​i​s​C​o​r​p​,​
 		​
@@ -974,10 +977,12 @@ export type TranslationFunctions = {
 			 */
 			ACCEPTED_MESSAGE: () => LocalizedString
 			/**
-			 * You have been rejected as an applicant! 
-		 Reason for rejecting: {reason}
+			 * <@{user_id}>
+		You have been rejected as an applicant! 
+	
+		Reason for rejecting: {reason}
 			 */
-			REJECTED_MESSAGE: (arg: { reason: string }) => LocalizedString
+			REJECTED_MESSAGE: (arg: { reason: string, user_id: string }) => LocalizedString
 			/**
 			 * Hello everyone at ArisCorp,
 	
