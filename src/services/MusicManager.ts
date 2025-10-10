@@ -84,7 +84,7 @@ type ApiResponse = {
 }
 // --- End Types ---
 
-const TARGET_NODE_COUNT = 3 // Desired number of Lavalink nodes to manage
+const DEFAULT_TARGET_NODE_COUNT = 3 // Desired number of Lavalink nodes to manage when using dynamic discovery
 const API_URL = 'https://lavalink-api.appujet.site/api/nodes' // API Endpoint for fetching nodes
 
 /**
@@ -112,6 +112,15 @@ export class MoonlinkService {
 	/** Flag indicating if the initial connection and setup have been completed successfully. */
 	private initialConnectionDone = false
 
+	/** Collection of statically configured Lavalink nodes, if provided via environment variables. */
+	private staticNodeConfigs: INode[] = []
+
+	/** Target number of nodes to maintain, dynamic based on configuration strategy. */
+	private targetNodeCount = DEFAULT_TARGET_NODE_COUNT
+
+	/** Indicates whether the service should rely on statically configured nodes instead of the discovery API. */
+	private useStaticNodes = false
+
 	/**
 	 * Injects dependencies: Discord Client and Logger.
 	 * @param client The discordx Client instance.
@@ -120,7 +129,160 @@ export class MoonlinkService {
 	constructor(
 		@inject(delay(() => Client)) private client: Client,
 		private logger: Logger
-	) {}
+	) {
+		this.configureNodeSources()
+	}
+
+	/**
+	 * Initializes Lavalink node sourcing strategy based on available environment variables.
+	 */
+	private configureNodeSources(): void {
+		this.staticNodeConfigs = this.loadStaticNodeConfigs()
+		this.useStaticNodes = this.staticNodeConfigs.length > 0
+		this.targetNodeCount = this.useStaticNodes ? this.staticNodeConfigs.length : DEFAULT_TARGET_NODE_COUNT
+
+		const mode = this.useStaticNodes ? 'static configuration' : 'dynamic API discovery'
+		this.logger.log(`[MoonlinkService] Lavalink node configuration initialized using ${mode}. Target nodes: ${this.targetNodeCount}.`, 'info')
+	}
+
+	/**
+	 * Builds Lavalink node configurations from environment variables.
+	 */
+	private loadStaticNodeConfigs(): INode[] {
+		const configs: INode[] = []
+		const nodesJson = process.env.LAVALINK_NODES
+
+		if (nodesJson) {
+			try {
+				const parsed = JSON.parse(nodesJson)
+				const rawNodes = Array.isArray(parsed) ? parsed : [parsed]
+				rawNodes.forEach((raw, index) => {
+					const node = this.normalizeNodeConfig(raw, `LAVALINK_NODES[${index}]`)
+					if (node) configs.push(node)
+				})
+			} catch (error: any) {
+				this.logger.log(`[MoonlinkService] Failed to parse LAVALINK_NODES JSON: ${error?.message ?? error}`, 'error')
+			}
+		}
+
+		if (configs.length > 0) {
+			return configs
+		}
+
+		const host = process.env.LAVALINK_HOST
+		const port = process.env.LAVALINK_PORT
+		const password = process.env.LAVALINK_PASSWORD
+		const identifier = process.env.LAVALINK_IDENTIFIER
+		const secure = process.env.LAVALINK_SECURE
+
+		// If any Lavalink-related env var is provided, validate the required trio.
+		const lavalinkEnvProvided = [host, port, password, identifier, secure].some(value => value !== undefined)
+		if (lavalinkEnvProvided) {
+			if (!host || !port || !password) {
+				this.logger.log('[MoonlinkService] Incomplete Lavalink environment configuration. Provide LAVALINK_HOST, LAVALINK_PORT, and LAVALINK_PASSWORD.', 'warn')
+
+				return []
+			}
+
+			const node = this.normalizeNodeConfig({ host, port, password, secure, identifier }, 'LAVALINK_* env')
+			if (node) configs.push(node)
+		}
+
+		return configs
+	}
+
+	/**
+	 * Normalizes raw Lavalink node data into the INode shape expected by Moonlink.
+	 */
+	private normalizeNodeConfig(raw: any, origin: string): INode | null {
+		if (!raw) {
+			this.logger.log(`[MoonlinkService] Skipping empty Lavalink node definition from ${origin}.`, 'warn')
+
+			return null
+		}
+
+		const host = typeof raw.host === 'string' ? raw.host.trim() : ''
+		const portValue = raw.port ?? raw.portNumber ?? raw.portValue
+		const port = typeof portValue === 'number' ? portValue : Number(portValue)
+		const passwordValue = raw.password ?? raw.pass ?? raw.secret
+		const password = passwordValue !== undefined && passwordValue !== null ? String(passwordValue) : ''
+
+		if (!host || Number.isNaN(port) || password.length === 0) {
+			this.logger.log(`[MoonlinkService] Invalid Lavalink node definition in ${origin}. Ensure host, port, and password are provided.`, 'error')
+
+			return null
+		}
+
+		const identifierSource = typeof raw.identifier === 'string' && raw.identifier.trim().length > 0
+			? raw.identifier.trim()
+			: `${host}:${port}`
+
+		return {
+			host,
+			port,
+			password,
+			secure: this.parseBoolean(raw.secure, false),
+			identifier: identifierSource,
+		}
+	}
+
+	/**
+	 * Parses a loose boolean value into a strict boolean with a default fallback.
+	 */
+	private parseBoolean(value: unknown, defaultValue: boolean): boolean {
+		if (typeof value === 'boolean') return value
+		if (typeof value === 'number') return value !== 0
+		if (typeof value === 'string') {
+			const normalized = value.trim().toLowerCase()
+			if (['true', '1', 'yes', 'y', 'on'].includes(normalized)) return true
+			if (['false', '0', 'no', 'n', 'off'].includes(normalized)) return false
+		}
+
+		return defaultValue
+	}
+
+	/**
+	 * Retrieves candidate nodes based on the current sourcing strategy.
+	 */
+	private async acquireNodeCandidates(count: number): Promise<INode[]> {
+		if (count <= 0) return []
+
+		if (this.useStaticNodes) {
+			const available = this.staticNodeConfigs.filter(node => {
+				const identifier = node.identifier || node.host
+				if (!identifier) return false
+
+				return !this.managedNodeIdentifiers.has(identifier)
+			})
+
+			return available.slice(0, count)
+		}
+
+		return this.fetchAndSelectNodesFromApi(count)
+	}
+
+	/**
+	 * Ensures statically configured nodes stay registered with the manager and tracking set.
+	 */
+	private ensureStaticNodesRegistered(): void {
+		if (!this.manager || !this.useStaticNodes) return
+
+		for (const nodeConfig of this.staticNodeConfigs) {
+			const identifier = nodeConfig.identifier || nodeConfig.host
+			if (!identifier) continue
+
+			const existingNode = this.manager.nodes.get(identifier)
+			if (!existingNode) {
+				this.logger.log(`[MoonlinkService] Static node "${identifier}" missing from manager. Attempting re-add.`, 'warn')
+				if (!this.addNodeToManager(nodeConfig)) {
+					this.logger.log(`[MoonlinkService] Failed to re-register static node "${identifier}".`, 'error')
+				}
+			} else if (!this.managedNodeIdentifiers.has(identifier)) {
+				this.managedNodeIdentifiers.add(identifier)
+				this.logger.log(`[MoonlinkService] Static node "${identifier}" was untracked. Tracking restored.`, 'info')
+			}
+		}
+	}
 
 	/**
 	 * Initializes the Moonlink Manager and connects to initial Lavalink nodes.
@@ -152,7 +314,7 @@ export class MoonlinkService {
 		// Create Manager instance if it doesn't exist
 		if (!this.manager) {
 			this.manager = new Manager({
-				nodes: [], // Start empty, nodes added via API
+				nodes: [], // Start empty, nodes added based on configuration
 				sendPayload: (guildId: string, payload: any) => {
 					const guild = this.client.guilds.cache.get(guildId)
 					// Moonlink might pass objects directly, no need to parse if not a string
@@ -165,6 +327,7 @@ export class MoonlinkService {
 				},
 				options: {
 					autoResume: true, // Automatically resume playback state if possible
+					disableNativeSources: true, // Always delegate source handling to Lavalink plugins
 				},
 				// Optional: Define default search platform
 				// defaultSearchPlatform: "ytsearch",
@@ -226,7 +389,7 @@ export class MoonlinkService {
 	}
 
 	/**
-	 * Fetches initial Lavalink nodes from the API and adds them to the manager.
+	 * Fetches initial Lavalink nodes based on the configured strategy and adds them to the manager.
 	 * Only fetches nodes if the current count is below the target.
 	 */
 	private async fetchAndAddInitialNodes(): Promise<void> {
@@ -237,8 +400,8 @@ export class MoonlinkService {
 		}
 
 		const currentManagedCount = this.getManagedNodes().length
-		const nodesToFetch = TARGET_NODE_COUNT - currentManagedCount
-		this.logger.log(`[MoonlinkService] Need to fetch ${nodesToFetch} initial nodes (Target: ${TARGET_NODE_COUNT}, Current: ${currentManagedCount}).`, 'info')
+		const nodesToFetch = this.targetNodeCount - currentManagedCount
+		this.logger.log(`[MoonlinkService] Need to fetch ${nodesToFetch} initial node(s) (Target: ${this.targetNodeCount}, Current: ${currentManagedCount}).`, 'info')
 
 		if (nodesToFetch <= 0) {
 			this.logger.log('[MoonlinkService] Already have target number of managed nodes. Skipping initial fetch.', 'info')
@@ -246,18 +409,19 @@ export class MoonlinkService {
 			return
 		}
 
-		this.logger.log('[MoonlinkService] Fetching initial nodes from API...', 'info')
-		const apiNodes = await this.fetchAndSelectNodesFromApi(nodesToFetch)
+		const sourceLabel = this.useStaticNodes ? 'static configuration' : 'API'
+		this.logger.log(`[MoonlinkService] Fetching initial nodes from ${sourceLabel}...`, 'info')
+		const candidateNodes = await this.acquireNodeCandidates(nodesToFetch)
 
-		if (apiNodes.length === 0) {
-			this.logger.log('[MoonlinkService] No suitable initial nodes found from API.', 'warn')
+		if (candidateNodes.length === 0) {
+			this.logger.log(`[MoonlinkService] No suitable initial nodes found from ${sourceLabel}.`, 'warn')
 
 			return
 		}
 
-		this.logger.log(`[MoonlinkService] Adding ${apiNodes.length} initial nodes...`, 'info')
+		this.logger.log(`[MoonlinkService] Adding ${candidateNodes.length} initial node(s)...`, 'info')
 		let addedCount = 0
-		for (const nodeConfig of apiNodes) {
+		for (const nodeConfig of candidateNodes) {
 			if (this.addNodeToManager(nodeConfig)) {
 				addedCount++
 			}
@@ -291,10 +455,16 @@ export class MoonlinkService {
 
 		// Check if node with this identifier already exists in the manager or our tracking set
 		try {
-			if (this.manager.nodes.get(identifier) || this.managedNodeIdentifiers.has(identifier)) {
-				this.logger.log(`[MoonlinkService] Node with identifier "${identifier}" already exists or is tracked. Skipping add.`, 'warn')
+			const existingNode = this.manager.nodes.get(identifier)
+			const isTracked = this.managedNodeIdentifiers.has(identifier)
+			if (existingNode) {
+				this.logger.log(`[MoonlinkService] Node with identifier "${identifier}" already exists. Skipping add.`, 'warn')
 
 				return false
+			}
+			if (!existingNode && isTracked) {
+				this.logger.log(`[MoonlinkService] Node "${identifier}" was tracked but missing from manager. Allowing re-registration.`, 'info')
+				this.managedNodeIdentifiers.delete(identifier)
 			}
 		} catch {}
 
@@ -380,7 +550,13 @@ export class MoonlinkService {
 			// we might want to decide whether to start managing it or ignore it.
 			// Currently, we only manage nodes added via `addNodeToManager`.
 			if (!this.managedNodeIdentifiers.has(identifier)) {
-				this.logger.log(`[MoonlinkService] Untracked node "${identifier}" connected. It will not be managed by this service.`, 'info')
+				const isStaticNode = this.staticNodeConfigs.some(cfg => (cfg.identifier || cfg.host) === identifier)
+				if (this.useStaticNodes && isStaticNode) {
+					this.managedNodeIdentifiers.add(identifier)
+					this.logger.log(`[MoonlinkService] Static node "${identifier}" connected outside tracking. Tracking restored.`, 'info')
+				} else {
+					this.logger.log(`[MoonlinkService] Untracked node "${identifier}" connected. It will not be managed by this service.`, 'info')
+				}
 			}
 		})
 
@@ -389,8 +565,13 @@ export class MoonlinkService {
 			this.logger.log(`[Moonlink] Node "${identifier}" error: ${error?.message ?? JSON.stringify(error)}`, 'error')
 			// If the node experiencing an error is one we manage, schedule its replacement.
 			if (this.managedNodeIdentifiers.has(identifier)) {
-				this.logger.log(`[MoonlinkService] Managed node "${identifier}" encountered an error. Scheduling replacement check.`, 'warn')
-				this.scheduleNodeReplacement(identifier)
+				if (this.useStaticNodes) {
+					this.logger.log(`[MoonlinkService] Managed static node "${identifier}" encountered an error. Awaiting Lavalink reconnect.`, 'warn')
+					this.ensureStaticNodesRegistered()
+				} else {
+					this.logger.log(`[MoonlinkService] Managed node "${identifier}" encountered an error. Scheduling replacement check.`, 'warn')
+					this.scheduleNodeReplacement(identifier)
+				}
 			}
 		})
 
@@ -400,9 +581,14 @@ export class MoonlinkService {
 			this.logger.log(`[Moonlink] Node "${identifier}" disconnected. Reason: ${reasonMsg}`, 'warn')
 			// If the disconnected node is one we manage, remove tracking and schedule replacement.
 			if (this.managedNodeIdentifiers.has(identifier)) {
-				this.logger.log(`[MoonlinkService] Managed node "${identifier}" disconnected. Scheduling replacement.`, 'info')
-				// No need to call removeNodeFromManager here, scheduleNodeReplacement handles it.
-				this.scheduleNodeReplacement(identifier)
+				if (this.useStaticNodes) {
+					this.logger.log(`[MoonlinkService] Managed static node "${identifier}" disconnected. Monitoring for Lavalink reconnect.`, 'info')
+					this.ensureStaticNodesRegistered()
+				} else {
+					this.logger.log(`[MoonlinkService] Managed node "${identifier}" disconnected. Scheduling replacement.`, 'info')
+					// No need to call removeNodeFromManager here, scheduleNodeReplacement handles it.
+					this.scheduleNodeReplacement(identifier)
+				}
 			} else {
 				this.logger.log(`[MoonlinkService] Untracked node "${identifier}" disconnected. No replacement action taken.`, 'info')
 				// Ensure it's removed from the manager if it somehow still exists (Moonlink should handle this)
@@ -484,6 +670,11 @@ export class MoonlinkService {
 
 			return
 		}
+		if (this.useStaticNodes) {
+			this.logger.log(`[MoonlinkService] Static node "${identifier}" disconnected. Waiting for Lavalink to handle reconnection.`, 'info')
+
+			return
+		}
 
 		this.logger.log(`[MoonlinkService] Scheduling replacement check for node "${identifier}" in 5 seconds...`, 'info')
 		setTimeout(() => {
@@ -505,6 +696,12 @@ export class MoonlinkService {
 	 */
 	private async replaceDisconnectedNode(disconnectedIdentifier: string): Promise<void> {
 		if (!this.manager) return
+		if (this.useStaticNodes) {
+			this.logger.log(`[MoonlinkService] Static configuration active. Skipping replacement logic for "${disconnectedIdentifier}".`, 'info')
+			this.ensureStaticNodesRegistered()
+
+			return
+		}
 
 		this.logger.log(`[MoonlinkService] Attempting to replace disconnected/erroring node "${disconnectedIdentifier}"...`, 'info')
 
@@ -513,19 +710,20 @@ export class MoonlinkService {
 
 		// 2. Check if we need a new node
 		const currentManagedCount = this.managedNodeIdentifiers.size
-		const neededNodes = TARGET_NODE_COUNT - currentManagedCount
+		const neededNodes = this.targetNodeCount - currentManagedCount
 		if (neededNodes <= 0) {
-			this.logger.log(`[MoonlinkService] Have ${currentManagedCount} managed nodes (target: ${TARGET_NODE_COUNT}). No replacement needed for "${disconnectedIdentifier}".`, 'info')
+			this.logger.log(`[MoonlinkService] Have ${currentManagedCount} managed nodes (target: ${this.targetNodeCount}). No replacement needed for "${disconnectedIdentifier}".`, 'info')
 
 			return
 		}
 
 		// 3. Fetch new candidate nodes
-		this.logger.log(`[MoonlinkService] Need ${neededNodes} more node(s). Fetching from API...`, 'info')
-		const newNodeCandidates = await this.fetchAndSelectNodesFromApi(neededNodes)
+		const sourceLabel = this.useStaticNodes ? 'static configuration' : 'API'
+		this.logger.log(`[MoonlinkService] Need ${neededNodes} more node(s). Fetching from ${sourceLabel}...`, 'info')
+		const newNodeCandidates = await this.acquireNodeCandidates(neededNodes)
 
 		if (newNodeCandidates.length === 0) {
-			this.logger.log(`[MoonlinkService] Could not find suitable replacement node(s) for "${disconnectedIdentifier}" from API.`, 'warn')
+			this.logger.log(`[MoonlinkService] Could not find suitable replacement node(s) for "${disconnectedIdentifier}" from ${sourceLabel}.`, 'warn')
 
 			return
 		}
@@ -559,6 +757,12 @@ export class MoonlinkService {
 
 			return
 		}
+		if (this.useStaticNodes) {
+			this.logger.log('[MoonlinkService] Static configuration active. Ensuring configured nodes remain registered.', 'info')
+			this.ensureStaticNodesRegistered()
+
+			return
+		}
 
 		this.logger.log('[MoonlinkService] Performing periodic node check...', 'info')
 		const managedNodes = this.getManagedNodes() // Get nodes currently tracked by us
@@ -589,11 +793,12 @@ export class MoonlinkService {
 
 		// Check if we need to fetch more nodes (consider nodes pending replacement as 'gone')
 		const effectiveManagedCount = this.managedNodeIdentifiers.size - nodesToReplace.length
-		const neededNodes = TARGET_NODE_COUNT - effectiveManagedCount
+		const neededNodes = this.targetNodeCount - effectiveManagedCount
 
 		if (neededNodes > 0) {
-			this.logger.log(`[MoonlinkService] Periodic Check: Need ${neededNodes} more node(s) (Target: ${TARGET_NODE_COUNT}, Effective: ${effectiveManagedCount}). Fetching from API...`, 'info')
-			const newNodes = await this.fetchAndSelectNodesFromApi(neededNodes)
+			const sourceLabel = this.useStaticNodes ? 'static configuration' : 'API'
+			this.logger.log(`[MoonlinkService] Periodic Check: Need ${neededNodes} more node(s) (Target: ${this.targetNodeCount}, Effective: ${effectiveManagedCount}). Fetching from ${sourceLabel}...`, 'info')
+			const newNodes = await this.acquireNodeCandidates(neededNodes)
 			let addedCount = 0
 			for (const nodeConfig of newNodes) {
 				if (this.addNodeToManager(nodeConfig)) {

@@ -25,7 +25,7 @@ export default class PlayCommand {
 		localizationSource: 'COMMANDS.MUSIC.PLAY',
 	})
 	@Slash({
-		name: 'p',
+		name: 'pn',
 	})
 	async play(
 		@SlashOption({
@@ -75,6 +75,12 @@ export default class PlayCommand {
 		if (!manager) {
 			return interaction.reply({ content: 'Der Musik-Service ist noch nicht bereit. Bitte versuche es später erneut.', ephemeral: true })
 		}
+		const connectedNodes = Array.from(manager.nodes.cache.values()).filter(node => node.connected)
+		if (connectedNodes.length === 0) {
+			const waitingMessage = localize.ERRORS?.MUSIC?.NO_NODES?.() ?? 'Der Musik-Service verbindet sich gerade mit dem Lavalink-Server. Bitte versuche es gleich noch einmal.'
+			this.logger.log('[Play Command] Aborted playback: No connected Lavalink nodes available.', 'warn')
+			return interaction.reply({ content: waitingMessage, ephemeral: true })
+		}
 
 		await interaction.deferReply()
 
@@ -111,14 +117,10 @@ export default class PlayCommand {
 
 					break
 
-				case 'playlist':
-					// eslint-disable-next-line no-case-declarations
+				case 'playlist': {
 					let imageUrl
-
 					if (query.includes('spotify')) {
-						const resThumbnail = await fetch(
-							`https://open.spotify.com/oembed?url=${query}`
-						)
+						const resThumbnail = await fetch(`https://open.spotify.com/oembed?url=${query}`)
 						const data = await resThumbnail.json()
 						imageUrl = data.thumbnail_url
 					} else {
@@ -138,22 +140,40 @@ export default class PlayCommand {
 							iconURL: interaction.user.avatarURL() ?? '',
 						})
 						.setTitle(results.playlistInfo.name)
-						.addFields(
-							{
-								name: `:notes: ${localize.SHARED.MUSIC.EMBED.SONGS()}`,
-								value: `${results.tracks.map((track, index) => `${index + 1}. ${track.title}`).join('\n')}`,
-								inline: false,
-							},
-							{
-								name: `:control_knobs: ${localize.SHARED.MUSIC.EMBED.REQUESTED_BY()}`,
-								value: `${results.tracks[0].requestedBy}`,
-								inline: true,
-							}
-						)
+
+					const maxTracksToDisplay = 10
+					const tracksToDisplay = results.tracks.slice(0, maxTracksToDisplay)
+					const trackLines = tracksToDisplay
+						.map((track, index) => `${index + 1}. ${track.title}`)
+						.join('\n')
+					const trackFieldValue = trackLines.length > 1000
+						? `${trackLines.slice(0, 997)}...`
+						: trackLines
+					const remainingTracks = results.tracks.length - tracksToDisplay.length
+
+					embed.addFields(
+						{
+							name: `:notes: ${localize.SHARED.MUSIC.EMBED.SONGS()}`,
+							value: trackLines.length > 0 ? trackFieldValue : localize.ERRORS.MUSIC.NO_MATCHES(),
+							inline: false,
+						},
+						{
+							name: `:control_knobs: ${localize.SHARED.MUSIC.EMBED.REQUESTED_BY()}`,
+							value: `${results.tracks[0].requestedBy ?? interaction.user.tag}`,
+							inline: true,
+						}
+					)
+
+					if (remainingTracks > 0) {
+						embed.addFields({
+							name: ':heavy_plus_sign: Weitere Titel',
+							value: `${remainingTracks} weitere Titel wurden zur Warteschlange hinzugefügt.`,
+							inline: false,
+						})
+					}
 
 					if (imageUrl) embed.setThumbnail(imageUrl)
 
-					// Verbinde den Player mit dem Voice Channel (wenn nicht schon verbunden)
 					if (!player.connected) {
 						await player.connect({
 							setDeaf: true,
@@ -166,7 +186,6 @@ export default class PlayCommand {
 						this.logger.log(`[Play Command]: Add ${track.title} from playlist ${results.playlistInfo.name} is ${addStatus}`)
 					}
 
-					// Starte die Wiedergabe, wenn der Player nicht bereits spielt
 					if (!player.playing && !player.paused) {
 						await player.play()
 					}
@@ -174,6 +193,7 @@ export default class PlayCommand {
 					await interaction.editReply({ embeds: [embed] })
 
 					break
+				}
 
 				default:
 					// eslint-disable-next-line no-case-declarations
@@ -227,8 +247,14 @@ export default class PlayCommand {
 
 					break
 			}
-		} catch {
-
+		} catch (error: any) {
+			this.logger.log(`[Play Command] Failed to process query "${query}": ${error?.message ?? error}`, 'error')
+			const errorContent = localize.ERRORS?.MUSIC?.GENERIC?.() ?? 'Beim Abspielen ist ein unerwarteter Fehler aufgetreten.'
+			if (interaction.replied || interaction.deferred) {
+				await interaction.editReply({ content: errorContent })
+			} else {
+				await interaction.reply({ content: errorContent, ephemeral: true })
+			}
 		}
 	}
 

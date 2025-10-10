@@ -22,9 +22,9 @@ export const env = cleanEnv(process.env, {
 	API_PORT: num({ default: undefined }),
 	API_ADMIN_TOKEN: str({ default: undefined }),
 
-	LAVA_HOST: str({ default: undefined }),
-	LAVA_PORT: num({ default: undefined }),
-	LAVA_PASSWORD: str({ default: undefined }),
+	LAVALINK_HOST: str({ default: undefined }),
+	LAVALINK_PORT: num({ default: undefined }),
+	LAVALINK_PASSWORD: str({ default: undefined }),
 
 	IMGUR_CLIENT_ID: str({ default: undefined }),
 
@@ -60,9 +60,9 @@ export function checkEnvironmentVariables() {
 
 	if (generalConfig.musicPlayer === true) {
 		cleanEnv(process.env, {
-			LAVA_HOST: str(),
-			LAVA_PORT: num(),
-			LAVA_PASSWORD: str(),
+			LAVALINK_HOST: str(),
+			LAVALINK_PORT: num(),
+			LAVALINK_PASSWORD: str(),
 		})
 	}
 
