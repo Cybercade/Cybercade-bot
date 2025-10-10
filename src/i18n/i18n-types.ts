@@ -47,7 +47,7 @@ type RootTranslation = {
 			 */
 			NO_MATCHES: string
 			/**
-			 * D​u​ ​m​u​s​s​t​ ​d​i​c​h​ ​i​n​ ​e​i​n​e​m​ ​S​p​r​a​c​h​k​a​n​a​l​ ​b​e​f​i​n​d​e​n​.
+			 * Y​o​u​ ​m​u​s​t​ ​b​e​ ​i​n​ ​a​ ​v​o​i​c​e​ ​c​h​a​n​n​e​l​ ​t​o​ ​u​s​e​ ​t​h​i​s​ ​c​o​m​m​a​n​d​.
 			 */
 			NO_VOICE_CHANNEL: string
 			/**
@@ -62,6 +62,14 @@ type RootTranslation = {
 			 * T​h​e​r​e​ ​i​s​ ​n​o​ ​q​u​e​u​e​ ​f​o​r​ ​t​h​i​s​ ​s​e​r​v​e​r​.
 			 */
 			NO_QUEUE: string
+			/**
+			 * T​h​e​ ​m​u​s​i​c​ ​s​e​r​v​i​c​e​ ​i​s​ ​s​t​i​l​l​ ​c​o​n​n​e​c​t​i​n​g​ ​t​o​ ​L​a​v​a​l​i​n​k​.​ ​P​l​e​a​s​e​ ​t​r​y​ ​a​g​a​i​n​ ​s​h​o​r​t​l​y​.
+			 */
+			NO_NODES: string
+			/**
+			 * A​n​ ​u​n​e​x​p​e​c​t​e​d​ ​e​r​r​o​r​ ​o​c​c​u​r​r​e​d​ ​w​h​i​l​e​ ​t​r​y​i​n​g​ ​t​o​ ​p​l​a​y​ ​m​u​s​i​c​.
+			 */
+			GENERIC: string
 		}
 	}
 	SHARED: {
@@ -131,6 +139,10 @@ type RootTranslation = {
 				 * S​k​i​p​p​e​d​ ​t​o​ ​t​h​e​ ​n​e​x​t​ ​s​o​n​g​!
 				 */
 				SKIPPED: string
+				/**
+				 * T​h​i​s​ ​Y​o​u​T​u​b​e​ ​l​i​n​k​ ​i​s​ ​p​a​r​t​ ​o​f​ ​a​ ​p​l​a​y​l​i​s​t​.​ ​D​o​ ​y​o​u​ ​w​a​n​t​ ​t​o​ ​e​n​q​u​e​u​e​ ​t​h​e​ ​e​n​t​i​r​e​ ​p​l​a​y​l​i​s​t​?
+				 */
+				CONFIRM_PLAYLIST: string
 			}
 		}
 	}
@@ -579,7 +591,7 @@ export type TranslationFunctions = {
 			 */
 			NO_MATCHES: () => LocalizedString
 			/**
-			 * Du musst dich in einem Sprachkanal befinden.
+			 * You must be in a voice channel to use this command.
 			 */
 			NO_VOICE_CHANNEL: () => LocalizedString
 			/**
@@ -594,6 +606,14 @@ export type TranslationFunctions = {
 			 * There is no queue for this server.
 			 */
 			NO_QUEUE: () => LocalizedString
+			/**
+			 * The music service is still connecting to Lavalink. Please try again shortly.
+			 */
+			NO_NODES: () => LocalizedString
+			/**
+			 * An unexpected error occurred while trying to play music.
+			 */
+			GENERIC: () => LocalizedString
 		}
 	}
 	SHARED: {
@@ -663,6 +683,10 @@ export type TranslationFunctions = {
 				 * Skipped to the next song!
 				 */
 				SKIPPED: () => LocalizedString
+				/**
+				 * This YouTube link is part of a playlist. Do you want to enqueue the entire playlist?
+				 */
+				CONFIRM_PLAYLIST: () => LocalizedString
 			}
 		}
 	}

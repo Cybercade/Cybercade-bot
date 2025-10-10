@@ -13,10 +13,12 @@ const en = {
 		MUSIC: {
 			PLAYER_DISABLED: 'Music player is disabled.',
 			NO_MATCHES: 'There are no matches for your search.',
-			NO_VOICE_CHANNEL: 'Du musst dich in einem Sprachkanal befinden.',
+			NO_VOICE_CHANNEL: 'You must be in a voice channel to use this command.',
 			NO_PREVIOUS_TRACK: 'There is no previous track in this server.',
 			NO_NEXT_TRACK: 'There is no next track in this server.',
 			NO_QUEUE: 'There is no queue for this server.',
+			NO_NODES: 'The music service is still connecting to Lavalink. Please try again shortly.',
+			GENERIC: 'An unexpected error occurred while trying to play music.',
 		},
 	},
 	SHARED: {
@@ -38,6 +40,7 @@ const en = {
 				PAGE: 'Page',
 				STOPPED_PLAYING: 'Stopped playing!',
 				SKIPPED: 'Skipped to the next song!',
+				CONFIRM_PLAYLIST: 'This YouTube link is part of a playlist. Do you want to enqueue the entire playlist?',
 			},
 		},
 	},

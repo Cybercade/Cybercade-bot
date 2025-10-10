@@ -17,6 +17,8 @@ const de = {
 			NO_PREVIOUS_TRACK: 'There is no previous track in this server.',
 			NO_NEXT_TRACK: 'There is no next track in this server.',
 			NO_QUEUE: 'Es gibt keine Warteschlange auf diesem Server.',
+			NO_NODES: 'Der Musikdienst verbindet sich noch mit Lavalink. Bitte versuche es gleich erneut.',
+			GENERIC: 'Beim Abspielen ist ein unerwarteter Fehler aufgetreten.',
 		},
 	},
 	SHARED: {
@@ -38,6 +40,7 @@ const de = {
 				PAGE: 'Seite',
 				STOPPED_PLAYING: 'Musik gestoppt',
 				SKIPPED: 'Zum nächsten Lied gesprungen!',
+				CONFIRM_PLAYLIST: 'Dieser YouTube-Link gehört zu einer Playlist. Möchtest du die komplette Playlist in die Warteschlange legen?',
 			},
 		},
 	},
