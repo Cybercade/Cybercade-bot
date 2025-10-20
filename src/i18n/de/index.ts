@@ -19,6 +19,8 @@ const de = {
 			NO_QUEUE: 'Es gibt keine Warteschlange auf diesem Server.',
 			NO_NODES: 'Der Musikdienst verbindet sich noch mit Lavalink. Bitte versuche es gleich erneut.',
 			GENERIC: 'Beim Abspielen ist ein unerwarteter Fehler aufgetreten.',
+			PLAYLIST_CONFIRMATION_TIMEOUT: 'Playlist-Bestätigung abgelaufen. Es wurden keine Titel hinzugefügt.',
+			INTERACTION_NOT_ALLOWED: 'Nur der Nutzer, der den Befehl ausgeführt hat, kann diese Buttons benutzen.',
 		},
 	},
 	SHARED: {
@@ -41,6 +43,10 @@ const de = {
 				STOPPED_PLAYING: 'Musik gestoppt',
 				SKIPPED: 'Zum nächsten Lied gesprungen!',
 				CONFIRM_PLAYLIST: 'Dieser YouTube-Link gehört zu einer Playlist. Möchtest du die komplette Playlist in die Warteschlange legen?',
+			},
+			BUTTONS: {
+				PLAYLIST_ADD_ALL: 'Ganze Playlist hinzufügen',
+				PLAYLIST_ADD_FIRST: 'Nur erstes Lied abspielen',
 			},
 		},
 	},

@@ -19,6 +19,8 @@ const en = {
 			NO_QUEUE: 'There is no queue for this server.',
 			NO_NODES: 'The music service is still connecting to Lavalink. Please try again shortly.',
 			GENERIC: 'An unexpected error occurred while trying to play music.',
+			PLAYLIST_CONFIRMATION_TIMEOUT: 'Playlist confirmation timed out. No tracks were added.',
+			INTERACTION_NOT_ALLOWED: 'Only the user who ran the command can use these buttons.',
 		},
 	},
 	SHARED: {
@@ -41,6 +43,10 @@ const en = {
 				STOPPED_PLAYING: 'Stopped playing!',
 				SKIPPED: 'Skipped to the next song!',
 				CONFIRM_PLAYLIST: 'This YouTube link is part of a playlist. Do you want to enqueue the entire playlist?',
+			},
+			BUTTONS: {
+				PLAYLIST_ADD_ALL: 'Add entire playlist',
+				PLAYLIST_ADD_FIRST: 'Play only the first song',
 			},
 		},
 	},

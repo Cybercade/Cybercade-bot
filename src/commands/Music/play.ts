@@ -1,5 +1,5 @@
 import { Category } from '@discordx/utilities'
-import { ApplicationCommandOptionType, CommandInteraction, EmbedBuilder, GuildMember, VoiceBasedChannel } from 'discord.js'
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, CommandInteraction, ComponentType, EmbedBuilder, GuildMember, VoiceBasedChannel } from 'discord.js'
 import { Client } from 'discordx'
 
 import { generalConfig } from '@/configs'
@@ -79,6 +79,7 @@ export default class PlayCommand {
 		if (connectedNodes.length === 0) {
 			const waitingMessage = localize.ERRORS?.MUSIC?.NO_NODES?.() ?? 'Der Musik-Service verbindet sich gerade mit dem Lavalink-Server. Bitte versuche es gleich noch einmal.'
 			this.logger.log('[Play Command] Aborted playback: No connected Lavalink nodes available.', 'warn')
+
 			return interaction.reply({ content: waitingMessage, ephemeral: true })
 		}
 
@@ -135,11 +136,8 @@ export default class PlayCommand {
 					}
 
 					embed
-						.setAuthor({
-							name: localize.SHARED.MUSIC.EMBED.ADDED_PLAYLIST_TO_QUEUE(),
-							iconURL: interaction.user.avatarURL() ?? '',
-						})
 						.setTitle(results.playlistInfo.name)
+						.setDescription(localize.SHARED.MUSIC.EMBED.CONFIRM_PLAYLIST())
 
 					const maxTracksToDisplay = 10
 					const tracksToDisplay = results.tracks.slice(0, maxTracksToDisplay)
@@ -174,6 +172,77 @@ export default class PlayCommand {
 
 					if (imageUrl) embed.setThumbnail(imageUrl)
 
+					const addAllCustomId = `playlist-add-all:${interaction.id}`
+					const addFirstCustomId = `playlist-add-first:${interaction.id}`
+
+					const actionRow = new ActionRowBuilder<ButtonBuilder>()
+						.addComponents(
+							new ButtonBuilder()
+								.setCustomId(addAllCustomId)
+								.setLabel(localize.SHARED.MUSIC.BUTTONS.PLAYLIST_ADD_ALL())
+								.setStyle(ButtonStyle.Success),
+							new ButtonBuilder()
+								.setCustomId(addFirstCustomId)
+								.setLabel(localize.SHARED.MUSIC.BUTTONS.PLAYLIST_ADD_FIRST())
+								.setStyle(ButtonStyle.Danger)
+						)
+
+					const replyMessage = await interaction.editReply({
+						embeds: [embed],
+						components: [actionRow],
+					})
+
+					let selection: 'all' | 'first' | undefined
+					try {
+						const buttonInteraction = await replyMessage.awaitMessageComponent({
+							componentType: ComponentType.Button,
+							time: 30_000,
+							filter: async (buttonInteraction) => {
+								if (![addAllCustomId, addFirstCustomId].includes(buttonInteraction.customId)) {
+									return false
+								}
+
+								if (buttonInteraction.user.id !== interaction.user.id) {
+									await buttonInteraction.reply({
+										content: localize.ERRORS.MUSIC.INTERACTION_NOT_ALLOWED(),
+										ephemeral: true,
+									})
+
+									return false
+								}
+
+								return true
+							},
+						})
+
+						selection = buttonInteraction.customId === addAllCustomId ? 'all' : 'first'
+						await buttonInteraction.deferUpdate()
+					} catch (error) {
+						await interaction.editReply({
+							content: localize.ERRORS.MUSIC.PLAYLIST_CONFIRMATION_TIMEOUT(),
+							embeds: [],
+							components: [],
+						})
+
+						return
+					}
+
+					if (!selection) {
+						return
+					}
+
+					const tracksToQueue = selection === 'all' ? results.tracks : results.tracks.slice(0, 1)
+
+					if (!tracksToQueue.length) {
+						await interaction.editReply({
+							content: localize.ERRORS.MUSIC.NO_MATCHES(),
+							embeds: [],
+							components: [],
+						})
+
+						return
+					}
+
 					if (!player.connected) {
 						await player.connect({
 							setDeaf: true,
@@ -181,7 +250,7 @@ export default class PlayCommand {
 						})
 					}
 
-					for (const track of results.tracks) {
+					for (const track of tracksToQueue) {
 						const addStatus = player.queue.add(track)
 						this.logger.log(`[Play Command]: Add ${track.title} from playlist ${results.playlistInfo.name} is ${addStatus}`)
 					}
@@ -190,7 +259,59 @@ export default class PlayCommand {
 						await player.play()
 					}
 
-					await interaction.editReply({ embeds: [embed] })
+					if (selection === 'all') {
+						embed
+							.setDescription(null)
+							.setAuthor({
+								name: localize.SHARED.MUSIC.EMBED.ADDED_PLAYLIST_TO_QUEUE(),
+								iconURL: interaction.user.avatarURL() ?? '',
+							})
+
+						await interaction.editReply({
+							embeds: [embed],
+							components: [],
+						})
+					} else {
+						const track = tracksToQueue[0]
+
+						const singleTrackEmbed = new EmbedBuilder()
+							.setColor(guildData?.color ? Number.parseInt(guildData.color.replace('#', ''), 16) : '#2600ff')
+							.setFooter({
+								text: client.user?.username ?? 'Cyberca.de Bot',
+								iconURL: client.user?.avatarURL() ?? 'https://cdn.discordapp.com/embed/avatars/1.png',
+							})
+							.setTimestamp()
+							.setAuthor({
+								name: localize.SHARED.MUSIC.EMBED.ADDED_TO_QUEUE(),
+								iconURL: interaction.user.avatarURL() ?? '',
+							})
+							.setTitle(track.title)
+							.addFields(
+								{
+									name: `:microphone: ${localize.SHARED.MUSIC.EMBED.INTERPRETER()}`,
+									value: track.author,
+									inline: false,
+								},
+								{
+									name: `:hourglass: ${localize.SHARED.MUSIC.EMBED.LENGTH()}`,
+									value: formatDuration(track.duration),
+									inline: true,
+								},
+								{
+									name: `:control_knobs: ${localize.SHARED.MUSIC.EMBED.REQUESTED_BY()}`,
+									value: `${track.requestedBy}`,
+									inline: true,
+								}
+							)
+
+						if (track.artworkUrl) singleTrackEmbed.setThumbnail(track.artworkUrl)
+						if (track.url) singleTrackEmbed.setURL(track.url)
+
+						await interaction.editReply({
+							embeds: [singleTrackEmbed],
+							components: [],
+						})
+					}
 
 					break
 				}

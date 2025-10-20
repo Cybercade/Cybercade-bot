@@ -70,6 +70,14 @@ type RootTranslation = {
 			 * A​n​ ​u​n​e​x​p​e​c​t​e​d​ ​e​r​r​o​r​ ​o​c​c​u​r​r​e​d​ ​w​h​i​l​e​ ​t​r​y​i​n​g​ ​t​o​ ​p​l​a​y​ ​m​u​s​i​c​.
 			 */
 			GENERIC: string
+			/**
+			 * P​l​a​y​l​i​s​t​ ​c​o​n​f​i​r​m​a​t​i​o​n​ ​t​i​m​e​d​ ​o​u​t​.​ ​N​o​ ​t​r​a​c​k​s​ ​w​e​r​e​ ​a​d​d​e​d​.
+			 */
+			PLAYLIST_CONFIRMATION_TIMEOUT: string
+			/**
+			 * O​n​l​y​ ​t​h​e​ ​u​s​e​r​ ​w​h​o​ ​r​a​n​ ​t​h​e​ ​c​o​m​m​a​n​d​ ​c​a​n​ ​u​s​e​ ​t​h​e​s​e​ ​b​u​t​t​o​n​s​.
+			 */
+			INTERACTION_NOT_ALLOWED: string
 		}
 	}
 	SHARED: {
@@ -143,6 +151,16 @@ type RootTranslation = {
 				 * T​h​i​s​ ​Y​o​u​T​u​b​e​ ​l​i​n​k​ ​i​s​ ​p​a​r​t​ ​o​f​ ​a​ ​p​l​a​y​l​i​s​t​.​ ​D​o​ ​y​o​u​ ​w​a​n​t​ ​t​o​ ​e​n​q​u​e​u​e​ ​t​h​e​ ​e​n​t​i​r​e​ ​p​l​a​y​l​i​s​t​?
 				 */
 				CONFIRM_PLAYLIST: string
+			}
+			BUTTONS: {
+				/**
+				 * A​d​d​ ​e​n​t​i​r​e​ ​p​l​a​y​l​i​s​t
+				 */
+				PLAYLIST_ADD_ALL: string
+				/**
+				 * P​l​a​y​ ​o​n​l​y​ ​t​h​e​ ​f​i​r​s​t​ ​s​o​n​g
+				 */
+				PLAYLIST_ADD_FIRST: string
 			}
 		}
 	}
@@ -614,6 +632,14 @@ export type TranslationFunctions = {
 			 * An unexpected error occurred while trying to play music.
 			 */
 			GENERIC: () => LocalizedString
+			/**
+			 * Playlist confirmation timed out. No tracks were added.
+			 */
+			PLAYLIST_CONFIRMATION_TIMEOUT: () => LocalizedString
+			/**
+			 * Only the user who ran the command can use these buttons.
+			 */
+			INTERACTION_NOT_ALLOWED: () => LocalizedString
 		}
 	}
 	SHARED: {
@@ -687,6 +713,16 @@ export type TranslationFunctions = {
 				 * This YouTube link is part of a playlist. Do you want to enqueue the entire playlist?
 				 */
 				CONFIRM_PLAYLIST: () => LocalizedString
+			}
+			BUTTONS: {
+				/**
+				 * Add entire playlist
+				 */
+				PLAYLIST_ADD_ALL: () => LocalizedString
+				/**
+				 * Play only the first song
+				 */
+				PLAYLIST_ADD_FIRST: () => LocalizedString
 			}
 		}
 	}
