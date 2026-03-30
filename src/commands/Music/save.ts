@@ -2,12 +2,11 @@ import { Category } from '@discordx/utilities'
 import { ButtonInteraction, CommandInteraction, EmbedBuilder, GuildMember, VoiceBasedChannel } from 'discord.js'
 import { Client } from 'discordx'
 
-import { generalConfig } from '@/configs'
 import { Discord, Injectable, Slash, SlashGroup } from '@/decorators'
 import { Guild } from '@/entities'
 import { getLocaleFromInteraction, L } from '@/i18n'
 import { Database, MoonlinkService } from '@/services'
-import { formatDuration, simpleErrorEmbed } from '@/utils/functions'
+import { formatDuration } from '@/utils/functions'
 
 @Discord()
 @Injectable()
@@ -40,16 +39,11 @@ export default class SaveCommand {
 			return
 		}
 
-		const player = manager.createPlayer({
-			guildId: interaction.guildId,
-			voiceChannelId: voiceChannel.id,
-			textChannelId: interaction.channelId,
-		})
+		const player = manager.hasPlayer(interaction.guildId) ? manager.getPlayer(interaction.guildId) : null
 
-		if (!player.playing) {
-			const pMsg = await interaction.followUp({
+		if (!player || !player.playing || !player.current) {
+			await interaction.editReply({
 				content: L[locale].ERRORS.MUSIC.NO_QUEUE(),
-				ephemeral: true,
 			})
 
 			return
@@ -107,7 +101,7 @@ export default class SaveCommand {
 	async save(
 		interaction: CommandInteraction,
 		client: Client,
-		{ localize }: InteractionData
+		{ localize: _localize }: InteractionData
 	) {
 		await interaction.deferReply({ ephemeral: true })
 

@@ -4,7 +4,7 @@ import { Client } from 'discordx'
 
 import { generalConfig } from '@/configs'
 import { Discord, Injectable, Slash, SlashGroup } from '@/decorators'
-import { MoonlinkService } from '@/services'
+import { Logger, MoonlinkService } from '@/services'
 import { simpleErrorEmbed } from '@/utils/functions'
 
 @Discord()
@@ -14,7 +14,8 @@ import { simpleErrorEmbed } from '@/utils/functions'
 export default class PlayCommand {
 
 	constructor(
-		private moonlinkService: MoonlinkService
+		private moonlinkService: MoonlinkService,
+		private logger: Logger
 	) { }
 
 	@Slash({
@@ -49,19 +50,20 @@ export default class PlayCommand {
 		await interaction.deferReply()
 
 		try {
-			// Erstelle oder hole den Player für diesen Server
-			const player = manager.createPlayer({
-				guildId: interaction.guildId,
-				voiceChannelId: voiceChannel.id,
-				textChannelId: interaction.channelId,
-			})
+			const player = manager.hasPlayer(interaction.guildId) ? manager.getPlayer(interaction.guildId) : null
+			if (!player) {
+				await interaction.editReply({ content: localize.ERRORS.MUSIC.NO_QUEUE() })
+
+				return
+			}
 
 			await player.stop()
 			await player.disconnect()
 
-			interaction.editReply({ content: localize.SHARED.MUSIC.EMBED.STOPPED_PLAYING() })
-		} catch {
-
+			await interaction.editReply({ content: localize.SHARED.MUSIC.EMBED.STOPPED_PLAYING() })
+		} catch (error: any) {
+			this.logger.log(`[Stop Command] Failed to stop playback in guild ${interaction.guildId}: ${error?.message ?? error}`, 'error')
+			await interaction.editReply({ content: localize.ERRORS.MUSIC.GENERIC() })
 		}
 	}
 

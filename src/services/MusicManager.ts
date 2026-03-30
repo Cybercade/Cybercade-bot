@@ -1,4 +1,6 @@
 // /home/lgruber/Development/Cybercade/cybercade-bot/src/services/MusicManager.ts
+import process from 'node:process'
+
 import axios, { AxiosError } from 'axios'
 import { Client } from 'discordx'
 import * as dotenv from 'dotenv'
@@ -248,7 +250,7 @@ export class MoonlinkService {
 		if (count <= 0) return []
 
 		if (this.useStaticNodes) {
-			const available = this.staticNodeConfigs.filter(node => {
+			const available = this.staticNodeConfigs.filter((node) => {
 				const identifier = node.identifier || node.host
 				if (!identifier) return false
 
@@ -333,6 +335,7 @@ export class MoonlinkService {
 				// defaultSearchPlatform: "ytsearch",
 			})
 			this.logger.log('[MoonlinkService] Moonlink Manager created.', 'info')
+			this.patchMoonlinkVoiceHandshake()
 			this.setupManagerListeners() // Setup listeners immediately after creation
 		} else {
 			this.logger.log('[MoonlinkService] Moonlink Manager already exists. Skipping creation.', 'warn')
@@ -386,6 +389,81 @@ export class MoonlinkService {
 	private handleRawPacket = (packet: any): void => {
 		// Only forward if the manager exists and is initialized
 		this.manager?.packetUpdate(packet)
+	}
+
+	/**
+	 * Moonlink.js 4.6.3 sends Lavalink voice updates without `channelId`,
+	 * which Lavalink v4 rejects. Patch the manager method locally until the
+	 * upstream implementation is fixed.
+	 */
+	private patchMoonlinkVoiceHandshake(): void {
+		if (!this.manager) return
+
+		type PatchedManager = Manager & {
+			attemptConnection?: (guildId: string) => Promise<boolean>
+			__cybercadeVoicePatchApplied?: boolean
+		}
+
+		const manager = this.manager as PatchedManager
+		if (manager.__cybercadeVoicePatchApplied) return
+		if (!manager.attemptConnection) {
+			this.logger.log('[MoonlinkService] Moonlink voice handshake patch skipped: attemptConnection is unavailable.', 'warn')
+
+			return
+		}
+
+		manager.attemptConnection = async (guildId: string): Promise<boolean> => {
+			const player = manager.getPlayer(guildId)
+			if (!player) return false
+
+			const voiceState = player.voiceState
+			if (!voiceState?.token || !voiceState.sessionId || !voiceState.endpoint || !player.voiceChannelId) {
+				return false
+			}
+
+			try {
+				const updatedPlayer = await player.node.rest.update({
+					guildId,
+					data: {
+						voice: {
+							sessionId: voiceState.sessionId,
+							token: voiceState.token,
+							endpoint: voiceState.endpoint,
+							channelId: player.voiceChannelId,
+						} as any,
+					},
+				})
+
+				if (updatedPlayer) {
+					player.voiceState.attempt = true
+				}
+
+				return Boolean(updatedPlayer)
+			} catch (error: any) {
+				this.logger.log(`[MoonlinkService] Voice handshake update failed for guild ${guildId}: ${error?.message ?? error}`, 'error')
+
+				return false
+			}
+		}
+
+		manager.__cybercadeVoicePatchApplied = true
+		this.logger.log('[MoonlinkService] Applied Moonlink voice handshake compatibility patch.', 'info')
+	}
+
+	public async waitForVoiceConnection(player: Player, timeoutMs: number = 5_000): Promise<boolean> {
+		const startedAt = Date.now()
+
+		while (Date.now() - startedAt < timeoutMs) {
+			if (player.voiceState?.attempt) {
+				return true
+			}
+
+			await new Promise(resolve => setTimeout(resolve, 250))
+		}
+
+		this.logger.log(`[MoonlinkService] Voice handshake timed out for guild ${player.guildId}.`, 'warn')
+
+		return false
 	}
 
 	/**

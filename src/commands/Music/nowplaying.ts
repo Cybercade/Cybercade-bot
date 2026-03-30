@@ -1,5 +1,5 @@
 import { Category } from '@discordx/utilities'
-import { ButtonInteraction, CommandInteraction, EmbedBuilder, GuildMember, Message, VoiceBasedChannel } from 'discord.js'
+import { ButtonInteraction, CommandInteraction, EmbedBuilder, GuildMember, VoiceBasedChannel } from 'discord.js'
 import { Client } from 'discordx'
 
 import { Discord, Injectable, Slash, SlashGroup } from '@/decorators'
@@ -39,16 +39,11 @@ export default class QueueCommand {
 			return
 		}
 
-		const player = manager.createPlayer({
-			guildId: interaction.guildId,
-			voiceChannelId: voiceChannel.id,
-			textChannelId: interaction.channelId,
-		})
+		const player = manager.hasPlayer(interaction.guildId) ? manager.getPlayer(interaction.guildId) : null
 
-		if (!player.playing) {
-			const pMsg = await interaction.followUp({
+		if (!player || !player.playing || !player.current) {
+			await interaction.editReply({
 				content: L[locale].ERRORS.MUSIC.NO_QUEUE(),
-				ephemeral: true,
 			})
 
 			return
@@ -132,7 +127,7 @@ export default class QueueCommand {
 	async np(
 		interaction: CommandInteraction,
 		client: Client,
-		{ localize }: InteractionData
+		{ localize: _localize }: InteractionData
 	) {
 		await interaction.deferReply()
 
@@ -149,7 +144,7 @@ export default class QueueCommand {
 	async queue(
 		interaction: CommandInteraction,
 		client: Client,
-		{ localize }: InteractionData
+		{ localize: _localize }: InteractionData
 	) {
 		await interaction.deferReply()
 

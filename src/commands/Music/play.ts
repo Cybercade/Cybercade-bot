@@ -101,8 +101,21 @@ export default class PlayCommand {
 				})
 				.setTimestamp()
 
+			const existingPlayer = manager.hasPlayer(interaction.guildId) ? manager.getPlayer(interaction.guildId) : null
+			const movedVoiceChannel = Boolean(existingPlayer && existingPlayer.voiceChannelId !== voiceChannel.id)
+
+			if (existingPlayer && existingPlayer.voiceChannelId !== voiceChannel.id) {
+				existingPlayer.setVoiceChannelId(voiceChannel.id)
+			}
+			if (existingPlayer && existingPlayer.textChannelId !== interaction.channelId) {
+				existingPlayer.setTextChannelId(interaction.channelId)
+			}
+			if (existingPlayer && !existingPlayer.autoLeave) {
+				existingPlayer.setAutoLeave(true)
+			}
+
 			// Erstelle oder hole den Player für diesen Server
-			const player = manager.createPlayer({
+			const player = existingPlayer ?? manager.createPlayer({
 				guildId: interaction.guildId,
 				voiceChannelId: voiceChannel.id,
 				textChannelId: interaction.channelId,
@@ -243,7 +256,7 @@ export default class PlayCommand {
 						return
 					}
 
-					if (!player.connected) {
+					if (!player.connected || movedVoiceChannel) {
 						await player.connect({
 							setDeaf: true,
 							setMute: false,
@@ -256,6 +269,17 @@ export default class PlayCommand {
 					}
 
 					if (!player.playing && !player.paused) {
+						const voiceReady = await this.moonlinkService.waitForVoiceConnection(player)
+						if (!voiceReady) {
+							await interaction.editReply({
+								content: 'Der Bot konnte keine Sprachverbindung zu Discord herstellen. Bitte versuche es erneut.',
+								embeds: [],
+								components: [],
+							})
+
+							return
+						}
+
 						await player.play()
 					}
 
@@ -348,7 +372,7 @@ export default class PlayCommand {
 					if (track.url) embed.setURL(track.url)
 
 					// Verbinde den Player mit dem Voice Channel (wenn nicht schon verbunden)
-					if (!player.connected) {
+					if (!player.connected || movedVoiceChannel) {
 						await player.connect({
 							setDeaf: true,
 							setMute: false,
@@ -361,6 +385,13 @@ export default class PlayCommand {
 
 					// Starte die Wiedergabe, wenn der Player nicht bereits spielt
 					if (!player.playing && !player.paused) {
+						const voiceReady = await this.moonlinkService.waitForVoiceConnection(player)
+						if (!voiceReady) {
+							await interaction.editReply({ content: 'Der Bot konnte keine Sprachverbindung zu Discord herstellen. Bitte versuche es erneut.' })
+
+							return
+						}
+
 						await player.play()
 					}
 
